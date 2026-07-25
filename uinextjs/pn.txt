@@ -1,0 +1,173 @@
+project/
+│
+├── src/
+│   ├── config/
+│   │   ├── database.js
+│   │   └── env.js
+│   │
+│   ├── controllers/
+│   │   └── user.controller.js
+│   │
+│   ├── services/
+│   │   └── user.service.js
+│   │
+│   ├── repositories/
+│   │   └── user.repository.js
+│   │
+│   ├── routes/
+│   │   ├── index.js
+│   │   └── user.routes.js
+│   │
+│   ├── middlewares/
+│   │   ├── auth.middleware.js
+│   │   ├── error.middleware.js
+│   │   └── validation.middleware.js
+│   │
+│   ├── validators/
+│   │   └── user.validator.js
+│   │
+│   ├── utils/
+│   │   ├── response.js
+│   │   └── logger.js
+│   │
+│   ├── models/
+│   │   └── user.model.js
+│   │
+│   ├── app.js
+│   └── server.js
+│
+├── .env
+├── package.json
+└── README.md
+----------------------------------------------------
+my-dashboard-ui/
+│
+├── app/
+│   ├── (auth)/
+│   │   ├── login/
+│   │   │   └── page.tsx
+│   │   ├── register/
+│   │   ├── forgot-password/
+│   │   └── layout.tsx
+│   │
+│   ├── (dashboard)/
+│   │   ├── dashboard/
+│   │   │   ├── page.tsx
+│   │   │   ├── users/
+│   │   │   ├── products/
+│   │   │   ├── orders/
+│   │   │   ├── analytics/
+│   │   │   ├── reports/
+│   │   │   ├── settings/
+│   │   │   └── profile/
+│   │   │
+│   │   └── layout.tsx
+│   │
+│   ├── layout.tsx
+│   ├── globals.css
+│   ├── loading.tsx
+│   ├── error.tsx
+│   └── not-found.tsx
+│
+├── components/
+│   ├── ui/
+│   ├── layout/
+│   ├── common/
+│   ├── forms/
+│   ├── tables/
+│   ├── charts/
+│   ├── modals/
+│   ├── cards/
+│   └── dashboard/
+│
+├── features/
+│   ├── auth/
+│   ├── users/
+│   ├── products/
+│   ├── orders/
+│   ├── analytics/
+│   └── settings/
+│
+├── services/
+│   ├── api.ts
+│   ├── auth.ts
+│   ├── user.ts
+│   ├── product.ts
+│   ├── order.ts
+│   └── dashboard.ts
+│
+├── hooks/
+│   ├── useAuth.ts
+│   ├── usePagination.ts
+│   ├── useDebounce.ts
+│   └── useTheme.ts
+│
+├── store/
+│   ├── auth.ts
+│   ├── app.ts
+│   └── theme.ts
+│
+├── lib/
+│   ├── axios.ts
+│   ├── fetcher.ts
+│   ├── utils.ts
+│   └── constants.ts
+│
+├── providers/
+│   ├── QueryProvider.tsx
+│   ├── ThemeProvider.tsx
+│   └── AuthProvider.tsx
+│
+├── types/
+│   ├── auth.ts
+│   ├── user.ts
+│   ├── product.ts
+│   └── common.ts
+│
+├── config/
+│   ├── routes.ts
+│   ├── sidebar.ts
+│   ├── menu.ts
+│   └── env.ts
+│
+├── assets/
+│   ├── images/
+│   ├── icons/
+│   └── svg/
+│
+├── public/
+│
+├── middleware.ts
+├── next.config.ts
+├── tsconfig.json
+└── package.json
+--------------------------------------------------------
+dashboard/
+
+├── page.tsx                // Dashboard Home
+
+├── users/
+│   ├── page.tsx
+│   ├── create/page.tsx
+│   ├── [id]/page.tsx
+│   └── [id]/edit/page.tsx
+
+├── products/
+│   ├── page.tsx
+│   ├── create/
+│   ├── [id]/
+│   └── [id]/edit/
+
+├── orders/
+│
+├── customers/
+│
+├── categories/
+│
+├── analytics/
+│
+├── reports/
+│
+├── profile/
+│
+└── settings/

@@ -1,0 +1,19 @@
+services:
+  php:
+    image: php:8.3-apache
+    ports:
+      - "8080:80"
+
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+
+  node:
+    image: node:24
+    working_dir: /app
+    volumes:
+      - ./:/app
+    ports:
+      - "3000:3000"
+    command: sh -c "npm install && npm start"

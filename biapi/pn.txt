@@ -1,0 +1,58 @@
+node-api/
+│
+├── src/
+│   ├── config/
+│   │   ├── database.js
+│   │   ├── env.js
+│   │   └── logger.js
+│   │
+│   ├── modules/
+│   │   ├── users/
+│   │   │   ├── user.controller.js
+│   │   │   ├── user.service.js
+│   │   │   ├── user.repository.js
+│   │   │   ├── user.model.js
+│   │   │   ├── user.routes.js
+│   │   │   └── user.validation.js
+│   │   │
+│   │   ├── auth/
+│   │   │   ├── auth.controller.js
+│   │   │   ├── auth.service.js
+│   │   │   ├── auth.routes.js
+│   │   │   └── auth.validation.js
+│   │   │
+│   │   └── products/
+│   │       ├── product.controller.js
+│   │       ├── product.service.js
+│   │       ├── product.repository.js
+│   │       ├── product.model.js
+│   │       └── product.routes.js
+│   │
+│   ├── middleware/
+│   │   ├── auth.js
+│   │   ├── errorHandler.js
+│   │   └── validate.js
+│   │
+│   ├── helpers/
+│   │   ├── jwt.js
+│   │   ├── response.js
+│   │   └── bcrypt.js
+│   │
+│   ├── constants/
+│   │   ├── roles.js
+│   │   └── messages.js
+│   │
+│   ├── routes/
+│   │   └── index.js
+│   │
+│   ├── app.js
+│   └── server.js
+│
+├── tests/
+│
+├── uploads/
+│
+├── .env
+├── .env.example
+├── package.json
+└── README.md

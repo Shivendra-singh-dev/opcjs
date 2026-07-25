@@ -1,0 +1,32 @@
+{
+  "name": "nodejs_tuts",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shivendra-singh-dev/NodejsTuts.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Shivendra-singh-dev/NodejsTuts/issues"
+  },
+  "homepage": "https://github.com/Shivendra-singh-dev/NodejsTuts#readme",
+  "description": "",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mysql2": "^3.22.5",
+    "node": "^26.4.0",
+    "nodemon": "^3.1.14",
+    "npm": "^11.18.0"
+  }
+}
