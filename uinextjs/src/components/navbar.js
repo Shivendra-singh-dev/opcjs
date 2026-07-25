@@ -9,13 +9,7 @@ export default function Navbar() {
       <nav className={styles.navbar}>
         <div className={styles.navContainer}>
           <div className={styles.navLogo}>
-            <Image
-              src="/next.svg"
-              alt="Logo"
-              width={120}
-              height={30}
-              priority
-            />
+            <Image src="/next.svg" alt="Logo" width={120} height={30} priority/>
           </div>
           <div className={styles.navLinks}>
             <Link href="/" className={styles.navLink}>Home</Link>

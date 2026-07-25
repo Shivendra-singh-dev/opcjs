@@ -1,3 +1,6 @@
+'use client'
+
+import { useState, useEffect, useMemo } from "react";
 import styles from "./page.module.css";
 
 const kpis = [
@@ -39,6 +42,98 @@ const chartSeries = [18, 22, 16, 28, 24, 30, 27];
 const aiPredictions = [75, 82, 68, 90, 85, 78, 92];
 
 export default function DashboardPage() {
+  const [contacts, setContacts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
+
+  const fetchContacts = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/contacts');
+      const data = await res.json();
+      if (data.success) {
+        setContacts(data.data || []);
+      } else {
+        setError(data.message || 'Failed to load contacts.');
+      }
+    } catch (err) {
+      setError('Unable to connect to server.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchContacts();
+  }, []);
+
+  const handleDelete = async (id) => {
+    if (!confirm('Are you sure you want to delete this contact?')) return;
+    try {
+      const res = await fetch(`/api/contacts/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        setContacts(contacts.filter(c => c.id !== id));
+      } else {
+        alert(data.message || 'Delete failed.');
+      }
+    } catch (err) {
+      alert('Delete failed.');
+    }
+  };
+
+  const handleSort = (key) => {
+    setSortConfig(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc',
+    }));
+  };
+
+  const getSortIndicator = (key) => {
+    if (sortConfig.key !== key) return '↕';
+    return sortConfig.direction === 'asc' ? '↑' : '↓';
+  };
+
+  // Filtered + sorted contacts
+  const filteredContacts = useMemo(() => {
+    let filtered = contacts;
+    
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      filtered = contacts.filter(c => 
+        (c.name && c.name.toLowerCase().includes(q)) ||
+        (c.email && c.email.toLowerCase().includes(q)) ||
+        (c.mobile && c.mobile.toLowerCase().includes(q)) ||
+        (c.message && c.message.toLowerCase().includes(q))
+      );
+    }
+
+    // Apply sorting
+    const { key, direction } = sortConfig;
+    const sorted = [...filtered].sort((a, b) => {
+      let aVal = a[key];
+      let bVal = b[key];
+
+      // Handle date fields
+      if (key === 'created_at') {
+        aVal = new Date(aVal).getTime();
+        bVal = new Date(bVal).getTime();
+      } else {
+        aVal = (aVal || '').toString().toLowerCase();
+        bVal = (bVal || '').toString().toLowerCase();
+      }
+
+      if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+      if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return sorted;
+  }, [contacts, searchQuery, sortConfig]);
+
   return (
     <div className={styles.root}>
       {/* Page header */}
@@ -59,7 +154,7 @@ export default function DashboardPage() {
             <span className={styles.actionIcon}>✨</span>
             AI Analyze
           </button>
-          <button className={styles.actionBtnSecondary}>
+          <button className={styles.actionBtnSecondary} onClick={fetchContacts}>
             <span className={styles.actionIcon}>⟳</span>
             Refresh
           </button>
@@ -240,6 +335,135 @@ export default function DashboardPage() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* Contact Submissions - DataTable */}
+      <section className={styles.activityCard}>
+        <div className={styles.activityHeader}>
+          <div>
+            <div className={styles.cardTitle}>📞 Contact Submissions</div>
+            <div className={styles.cardSub}>Messages received from the contact form</div>
+          </div>
+          <div className={styles.activityFilters}>
+            {/* Search Input */}
+            <div className={styles.datatableSearchWrap}>
+              <span className={styles.datatableSearchIcon}>🔍</span>
+              <input
+                type="text"
+                className={styles.datatableSearchInput}
+                placeholder="Search by name, email, mobile, message..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button
+                  className={styles.datatableSearchClear}
+                  onClick={() => setSearchQuery('')}
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+            {!loading && (
+              <span className={styles.filterBtn}>
+                {filteredContacts.length} / {contacts.length} Total
+              </span>
+            )}
+          </div>
+        </div>
+
+        {loading ? (
+          <div className={styles.datatableEmpty}>
+            Loading contacts...
+          </div>
+        ) : error ? (
+          <div className={styles.datatableError}>
+            {error}
+          </div>
+        ) : contacts.length === 0 ? (
+          <div className={styles.datatableEmpty}>
+            No contacts found yet.
+          </div>
+        ) : filteredContacts.length === 0 ? (
+          <div className={styles.datatableEmpty}>
+            No contacts match your search.
+          </div>
+        ) : (
+          <div className={styles.datatableTableWrap}>
+            <table className={styles.datatableTable}>
+              <thead>
+                <tr>
+                  <th
+                    className={styles.datatableTh}
+                    onClick={() => handleSort('name')}
+                  >
+                    Name <span className={styles.sortIndicator}>{getSortIndicator('name')}</span>
+                  </th>
+                  <th
+                    className={styles.datatableTh}
+                    onClick={() => handleSort('email')}
+                  >
+                    Email <span className={styles.sortIndicator}>{getSortIndicator('email')}</span>
+                  </th>
+                  <th
+                    className={styles.datatableTh}
+                    onClick={() => handleSort('mobile')}
+                  >
+                    Mobile <span className={styles.sortIndicator}>{getSortIndicator('mobile')}</span>
+                  </th>
+                  <th
+                    className={styles.datatableTh}
+                    onClick={() => handleSort('message')}
+                  >
+                    Message <span className={styles.sortIndicator}>{getSortIndicator('message')}</span>
+                  </th>
+                  <th
+                    className={styles.datatableTh}
+                    onClick={() => handleSort('created_at')}
+                  >
+                    Date <span className={styles.sortIndicator}>{getSortIndicator('created_at')}</span>
+                  </th>
+                  <th className={styles.datatableTh}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredContacts.map((contact) => (
+                  <tr key={contact.id} className={styles.datatableTr}>
+                    <td className={styles.datatableTd}>{contact.name}</td>
+                    <td className={styles.datatableTd}>
+                      <span className={styles.datatableEmail}>{contact.email}</span>
+                    </td>
+                    <td className={styles.datatableTd}>{contact.mobile}</td>
+                    <td className={styles.datatableTd}>
+                      <span className={styles.datatableMessage} title={contact.message}>
+                        {contact.message}
+                      </span>
+                    </td>
+                    <td className={styles.datatableTd}>
+                      <span className={styles.datatableDate}>
+                        {new Date(contact.created_at).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    </td>
+                    <td className={styles.datatableTd}>
+                      <button
+                        onClick={() => handleDelete(contact.id)}
+                        className={styles.datatableDeleteBtn}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       <section className={styles.footerHint}>

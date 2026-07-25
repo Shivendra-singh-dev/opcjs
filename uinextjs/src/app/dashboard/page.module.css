@@ -580,6 +580,190 @@
   font-size: 0.8rem;
 }
 
+/* ===== DataTable Styles ===== */
+
+.datatableSearchWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(99, 102, 241, 0.12);
+  min-width: 280px;
+  transition: all 0.3s ease;
+}
+
+.datatableSearchWrap:focus-within {
+  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.05);
+}
+
+.datatableSearchIcon {
+  font-size: 0.85rem;
+  color: rgba(15, 23, 42, 0.3);
+  flex-shrink: 0;
+}
+
+.datatableSearchInput {
+  border: none;
+  outline: none;
+  flex: 1;
+  background: transparent;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: #1e293b;
+  min-width: 0;
+}
+
+.datatableSearchInput::placeholder {
+  color: rgba(15, 23, 42, 0.3);
+  font-weight: 500;
+}
+
+.datatableSearchClear {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: rgba(15, 23, 42, 0.3);
+  padding: 2px;
+  line-height: 1;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.datatableSearchClear:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.datatableTableWrap {
+  overflow-x: auto;
+  border-radius: 16px;
+  border: 1px solid rgba(99, 102, 241, 0.06);
+}
+
+.datatableTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.datatableTh {
+  padding: 12px 14px;
+  text-align: left;
+  font-weight: 800;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(15, 23, 42, 0.5);
+  background: rgba(248, 250, 252, 0.8);
+  border-bottom: 2px solid rgba(99, 102, 241, 0.08);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.datatableTh:hover {
+  color: #6366f1;
+}
+
+.sortIndicator {
+  font-size: 0.7rem;
+  margin-left: 4px;
+  opacity: 0.6;
+  display: inline-block;
+}
+
+.datatableTh:hover .sortIndicator {
+  opacity: 1;
+}
+
+.datatableTr {
+  transition: background 0.2s ease;
+}
+
+.datatableTr:nth-child(even) {
+  background: rgba(248, 250, 252, 0.5);
+}
+
+.datatableTr:hover {
+  background: rgba(99, 102, 241, 0.04);
+}
+
+.datatableTd {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.04);
+  color: #1e293b;
+  font-weight: 600;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.datatableEmail {
+  color: #6366f1;
+  font-weight: 700;
+}
+
+.datatableMessage {
+  display: block;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: rgba(15, 23, 42, 0.7);
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+.datatableDate {
+  font-size: 0.78rem;
+  color: rgba(15, 23, 42, 0.5);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.datatableDeleteBtn {
+  border: none;
+  cursor: pointer;
+  padding: 4px 14px;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+  font-weight: 800;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.2s ease;
+}
+
+.datatableDeleteBtn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  transform: scale(1.02);
+}
+
+.datatableEmpty {
+  padding: 32px 24px;
+  text-align: center;
+  color: rgba(15, 23, 42, 0.4);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.datatableError {
+  padding: 32px 24px;
+  text-align: center;
+  color: #ef4444;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
 /* Footer */
 .footerHint {
   margin-top: 4px;
