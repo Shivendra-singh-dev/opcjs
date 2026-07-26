@@ -1,17 +1,25 @@
 import express from 'express';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import productRoutes from './routes/products.js';
 import contactsRoutes from './routes/contacts.js';
+import userRoutes from './routes/users.js';
 
 dotenv.config();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Enable CORS for frontend
 app.use((req, res, next) => {
@@ -31,7 +39,9 @@ app.get('/', (req, res) => {
         message: 'CRUD API Server',
         version: '1.0.0',
         endpoints: {
-            products: '/api/products'
+            products: '/api/products',
+            contacts: '/api/contacts',
+            users: '/api/users'
         }
     });
 });
@@ -41,6 +51,9 @@ app.use('/api/products', productRoutes);
 
 // Contacts API
 app.use('/api/contacts', contactsRoutes);
+
+// Users API (signup, list, update, delete)
+app.use('/api/users', userRoutes);
 
 
 // 404 handler

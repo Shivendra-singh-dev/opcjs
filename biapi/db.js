@@ -52,11 +52,30 @@ const initializeDatabase = async () => {
                 role VARCHAR(50) DEFAULT 'user',
                 otp VARCHAR(10) DEFAULT NULL,
                 status VARCHAR(20) DEFAULT 'active',
+                profile_picture TEXT DEFAULT NULL,
+                address TEXT DEFAULT NULL,
+                city VARCHAR(100) DEFAULT NULL,
+                state VARCHAR(100) DEFAULT NULL,
+                zip_code VARCHAR(20) DEFAULT NULL,
+                country VARCHAR(100) DEFAULT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         `);
         console.log('✓ Users table ready');
+
+        // Add new columns if they don't exist (for existing tables)
+        try {
+            await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_picture TEXT DEFAULT NULL`);
+            await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT DEFAULT NULL`);
+            await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS city VARCHAR(100) DEFAULT NULL`);
+            await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS state VARCHAR(100) DEFAULT NULL`);
+            await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS zip_code VARCHAR(20) DEFAULT NULL`);
+            await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS country VARCHAR(100) DEFAULT NULL`);
+        } catch (alterErr) {
+            // Columns may already exist - ignore
+            console.log('Note: Some columns may already exist, continuing...');
+        }
 
     } catch (err) {
         console.error('✗ Database initialization failed:', err.message);

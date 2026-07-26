@@ -411,6 +411,11 @@
   border: 1px solid rgba(15, 23, 42, 0.06);
 }
 
+.profileDropdown {
+  position: relative;
+  flex-shrink: 0;
+}
+
 .profileChip {
   display: flex;
   align-items: center;
@@ -418,9 +423,174 @@
   padding: 6px 12px 6px 16px;
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(99, 102, 241, 0.08);
   position: relative;
   flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(99, 102, 241, 0.08);
+  font-family: inherit;
+  width: 100%;
+}
+
+.profileChip:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(99, 102, 241, 0.2);
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.08);
+  transform: translateY(-1px);
+}
+
+.profileChipActive {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.1);
+}
+
+.dropdownArrow {
+  font-size: 8px;
+  color: rgba(15, 23, 42, 0.3);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-left: 2px;
+}
+
+.dropdownArrowOpen {
+  transform: rotate(180deg);
+}
+
+/* Dropdown Menu */
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 280px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(24px);
+  border-radius: 20px;
+  border: 1px solid rgba(99, 102, 241, 0.12);
+  box-shadow: 
+    0 20px 60px rgba(2, 6, 23, 0.08),
+    0 8px 24px rgba(99, 102, 241, 0.06);
+  padding: 8px;
+  z-index: 100;
+  animation: dropdownFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: top right;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dropdownHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.04), rgba(139, 92, 246, 0.02));
+  margin-bottom: 4px;
+}
+
+.dropdownAvatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 1rem;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.15));
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  color: #6366f1;
+  flex-shrink: 0;
+}
+
+.dropdownUserInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dropdownName {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #1e293b;
+}
+
+.dropdownEmail {
+  font-weight: 600;
+  font-size: 0.78rem;
+  color: rgba(15, 23, 42, 0.4);
+}
+
+.dropdownDivider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.1), transparent);
+  margin: 4px 0;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  border-radius: 14px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #1e293b;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.dropdownItem:hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(139, 92, 246, 0.03));
+  transform: translateX(4px);
+}
+
+.dropdownItem:last-child {
+  color: #ef4444;
+}
+
+.dropdownItem:last-child:hover {
+  background: rgba(239, 68, 68, 0.06);
+  color: #dc2626;
+}
+
+.dropdownIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.04);
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.dropdownItem:last-child .dropdownIcon {
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.dropdownHint {
+  margin-left: auto;
+  font-size: 10px;
+  color: rgba(15, 23, 42, 0.3);
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.03);
 }
 
 .notificationDot {
@@ -581,6 +751,32 @@
 
   .profileText {
     flex: 1;
+  }
+
+  .dropdownMenu {
+    position: fixed;
+    top: auto;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    min-width: auto;
+    width: auto;
+    border-radius: 24px;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: dropdownFadeInMobile 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: bottom center;
+  }
+
+  @keyframes dropdownFadeInMobile {
+    from {
+      opacity: 0;
+      transform: translateY(16px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
   }
 
   .main {

@@ -1,18 +1,24 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
 import Navbar from "../../components/navbar.js";
 
 export default function Signup() {
+  const router = useRouter();
   const [isLogin, setIsLogin] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    mobile: "",
     password: "",
     confirmPassword: "",
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [isError, setIsError] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -21,10 +27,64 @@ export default function Signup() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log("Form submitted:", formData);
+    setLoading(true);
+    setMessage("");
+    setIsError(false);
+
+    // Validate passwords match for signup
+    if (!isLogin && formData.password !== formData.confirmPassword) {
+      setMessage("Passwords do not match");
+      setIsError(true);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const endpoint = isLogin ? "/api/users/login" : "/api/users";
+      const body = isLogin
+        ? { email: formData.email, password: formData.password }
+        : {
+            name: formData.name,
+            email: formData.email,
+            mobile: formData.mobile,
+            password: formData.password,
+          };
+
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setMessage(data.message || "Success!");
+        setIsError(false);
+        // Reset form
+        setFormData({
+          name: "",
+          email: "",
+          mobile: "",
+          password: "",
+          confirmPassword: "",
+        });
+        // Redirect to dashboard after 1 second
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 1000);
+      } else {
+        setMessage(data.error || "Something went wrong");
+        setIsError(true);
+      }
+    } catch (err) {
+      setMessage("Unable to connect to the server.");
+      setIsError(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const toggleMode = () => {
@@ -32,9 +92,12 @@ export default function Signup() {
     setFormData({
       name: "",
       email: "",
+      mobile: "",
       password: "",
       confirmPassword: "",
     });
+    setMessage("");
+    setIsError(false);
   };
 
   return (
@@ -70,6 +133,25 @@ export default function Signup() {
                         name="name"
                         placeholder="John Doe"
                         value={formData.name}
+                        onChange={handleChange}
+                        className={styles.formInput}
+                        required={!isLogin}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {!isLogin && (
+                  <div className={styles.formGroup}>
+                    <label htmlFor="mobile">Mobile Number</label>
+                    <div className={styles.inputWrapper}>
+                      <span className={styles.inputIcon}>📱</span>
+                      <input
+                        type="tel"
+                        id="mobile"
+                        name="mobile"
+                        placeholder="+1 (555) 123-4567"
+                        value={formData.mobile}
                         onChange={handleChange}
                         className={styles.formInput}
                         required={!isLogin}
@@ -150,8 +232,14 @@ export default function Signup() {
                   </div>
                 )}
 
-                <button type="submit" className={styles.submitBtn}>
-                  {isLogin ? "Sign In" : "Create Account"}
+                {message && (
+                  <div className={message.startsWith("Unable") || isError ? styles.errorMessage : styles.successMessage}>
+                    {message}
+                  </div>
+                )}
+
+                <button type="submit" className={styles.submitBtn} disabled={loading}>
+                  {loading ? "Processing..." : isLogin ? "Sign In" : "Create Account"}
                   <svg className={styles.btnIcon} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M5 12h14M12 5l7 7-7 7"/>
                   </svg>

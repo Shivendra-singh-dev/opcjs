@@ -1,19 +1,44 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import styles from './dashboard.module.css';
 
 export default function DashboardLayout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const dropdownRef = useRef(null);
 
   const navLinks = [
     { href: '/dashboard', label: 'Dashboard', icon: '📊' },
     { href: '/dashboard/contacts', label: 'Contacts', icon: '📞' },
-    { href: '/users', label: 'Users', icon: '👤' },
+    { href: '/dashboard/users', label: 'Users', icon: '👤' },
+    { href: '/dashboard/profile', label: 'Profile', icon: '👤' },
+    { href: '/dashboard/setting', label: 'Settings', icon: '⚙️' },
   ];
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setProfileOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    setProfileOpen(false);
+    router.push('/');
+  };
+
+  const handleProfileClick = () => {
+    setProfileOpen(!profileOpen);
+  };
 
   return (
     <div className={styles.dashboardRoot}>
@@ -84,7 +109,12 @@ export default function DashboardLayout({ children }) {
             <div className={styles.breadcrumb}>
               <span>/</span>
               <span className={styles.crumbCurrent}>
-                {pathname === '/dashboard' ? 'Dashboard' : 'Contacts'}
+                {pathname === '/dashboard' ? 'Dashboard' 
+                  : pathname.includes('/contacts') ? 'Contacts' 
+                  : pathname.includes('/users') ? 'Users'
+                  : pathname.includes('/profile') ? 'Profile'
+                  : pathname.includes('/setting') ? 'Settings'
+                  : 'Dashboard'}
               </span>
               <span className={styles.aiIndicator}>🤖 AI Powered</span>
             </div>
@@ -100,13 +130,51 @@ export default function DashboardLayout({ children }) {
                 <span className={styles.searchShortcut}>⌘K</span>
               </div>
 
-              <div className={styles.profileChip}>
-                <span className={styles.notificationDot} />
-                <div className={styles.profileText}>
-                  <span className={styles.profileName}>Admin User</span>
-                  <span className={styles.profileRole}>Administrator</span>
-                </div>
-                <div className={styles.profileAvatar}>AU</div>
+              {/* Profile Dropdown */}
+              <div className={styles.profileDropdown} ref={dropdownRef}>
+                <button
+                  className={`${styles.profileChip} ${profileOpen ? styles.profileChipActive : ''}`}
+                  onClick={handleProfileClick}
+                  aria-label="Profile menu"
+                  aria-expanded={profileOpen}
+                >
+                  <span className={styles.notificationDot} />
+                  <div className={styles.profileText}>
+                    <span className={styles.profileName}>Admin User</span>
+                    <span className={styles.profileRole}>Administrator</span>
+                  </div>
+                  <div className={styles.profileAvatar}>AU</div>
+                  <span className={`${styles.dropdownArrow} ${profileOpen ? styles.dropdownArrowOpen : ''}`}>
+                    ▼
+                  </span>
+                </button>
+
+                {profileOpen && (
+                  <div className={styles.dropdownMenu}>
+                    <div className={styles.dropdownHeader}>
+                      <div className={styles.dropdownAvatar}>AU</div>
+                      <div className={styles.dropdownUserInfo}>
+                        <span className={styles.dropdownName}>Admin User</span>
+                        <span className={styles.dropdownEmail}>admin@platform.com</span>
+                      </div>
+                    </div>
+                    <div className={styles.dropdownDivider} />
+                    <button className={styles.dropdownItem} onClick={() => { setProfileOpen(false); router.push('/dashboard/profile'); }}>
+                      <span className={styles.dropdownIcon}>👤</span>
+                      <span>My Profile</span>
+                    </button>
+                    <button className={styles.dropdownItem} onClick={() => { setProfileOpen(false); router.push('/dashboard/setting'); }}>
+                      <span className={styles.dropdownIcon}>⚙️</span>
+                      <span>Settings</span>
+                    </button>
+                    <div className={styles.dropdownDivider} />
+                    <button className={styles.dropdownItem} onClick={handleLogout}>
+                      <span className={styles.dropdownIcon}>🚪</span>
+                      <span>Logout</span>
+                      <span className={styles.dropdownHint}>→ Home</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
