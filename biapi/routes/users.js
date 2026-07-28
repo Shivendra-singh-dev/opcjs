@@ -24,6 +24,9 @@ router.put('/:id/profile', userController);
 // PUT /api/users/:id/profile/image - Update profile picture
 router.put('/:id/profile/image', userController);
 
+// PUT /api/users/:id/password - Change password
+router.put('/:id/password', userController);
+
 // DELETE /api/users/:id - Delete user
 router.delete('/:id', userController);
 

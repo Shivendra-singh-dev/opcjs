@@ -8,6 +8,7 @@ import styles from './dashboard.module.css';
 export default function DashboardLayout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [loggedInUser, setLoggedInUser] = useState(null);
   const pathname = usePathname();
   const router = useRouter();
   const dropdownRef = useRef(null);
@@ -19,6 +20,18 @@ export default function DashboardLayout({ children }) {
     { href: '/dashboard/profile', label: 'Profile', icon: '👤' },
     { href: '/dashboard/setting', label: 'Settings', icon: '⚙️' },
   ];
+
+  // Load user from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('loggedInUser');
+      if (stored) {
+        setLoggedInUser(JSON.parse(stored));
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -33,12 +46,23 @@ export default function DashboardLayout({ children }) {
 
   const handleLogout = () => {
     setProfileOpen(false);
+    localStorage.removeItem('loggedInUser');
     router.push('/');
   };
 
   const handleProfileClick = () => {
     setProfileOpen(!profileOpen);
   };
+
+  // Derive user initials and display info
+  const userName = loggedInUser?.name || 'Admin User';
+  const userEmail = loggedInUser?.email || 'admin@platform.com';
+  const userRole = loggedInUser?.role || 'Administrator';
+  const userInitials = userName
+    .split(' ')
+    .map(w => w.charAt(0).toUpperCase())
+    .slice(0, 2)
+    .join('') || 'AU';
 
   return (
     <div className={styles.dashboardRoot}>
@@ -140,10 +164,10 @@ export default function DashboardLayout({ children }) {
                 >
                   <span className={styles.notificationDot} />
                   <div className={styles.profileText}>
-                    <span className={styles.profileName}>Admin User</span>
-                    <span className={styles.profileRole}>Administrator</span>
+                    <span className={styles.profileName}>{userName}</span>
+                    <span className={styles.profileRole}>{userRole}</span>
                   </div>
-                  <div className={styles.profileAvatar}>AU</div>
+                  <div className={styles.profileAvatar}>{userInitials}</div>
                   <span className={`${styles.dropdownArrow} ${profileOpen ? styles.dropdownArrowOpen : ''}`}>
                     ▼
                   </span>
@@ -152,10 +176,10 @@ export default function DashboardLayout({ children }) {
                 {profileOpen && (
                   <div className={styles.dropdownMenu}>
                     <div className={styles.dropdownHeader}>
-                      <div className={styles.dropdownAvatar}>AU</div>
+                      <div className={styles.dropdownAvatar}>{userInitials}</div>
                       <div className={styles.dropdownUserInfo}>
-                        <span className={styles.dropdownName}>Admin User</span>
-                        <span className={styles.dropdownEmail}>admin@platform.com</span>
+                        <span className={styles.dropdownName}>{userName}</span>
+                        <span className={styles.dropdownEmail}>{userEmail}</span>
                       </div>
                     </div>
                     <div className={styles.dropdownDivider} />

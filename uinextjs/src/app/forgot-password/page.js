@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import styles from "./page.module.css";
-import Navbar from "../../components/navbar.js";
+import Navbar from "../../components/navbar";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -24,7 +24,7 @@ export default function ForgotPassword() {
             <div className={styles.forgotHeader}>
               <h1 className={styles.forgotTitle}>🔐 Reset Password</h1>
               <p className={styles.forgotSubtitle}>
-                Enter your email address and we'll send you a link to reset your password.
+                Enter your email address all send you a link to reset your password.
               </p>
             </div>
 
@@ -62,7 +62,7 @@ export default function ForgotPassword() {
                 <div className={styles.successIcon}>✅</div>
                 <h2>Check Your Email</h2>
                 <p>
-                  We've sent a password reset link to <strong>{email}</strong>.
+                  We ve sent a password reset link to <strong>{email}</strong>.
                   Please check your inbox and follow the instructions.
                 </p>
                 <button 

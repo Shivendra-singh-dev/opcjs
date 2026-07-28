@@ -86,29 +86,30 @@ const createUser = async (req, res) => {
   }
 };
 
-// POST /api/users/login - Login
+// POST /api/users/login - Login (supports email OR mobile)
 const loginUser = async (req, res) => {
-  const { email, password } = req.body;
+  const { emailOrMobile, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({ error: "Email and password are required" });
+  if (!emailOrMobile || !password) {
+    return res.status(400).json({ error: "Email/Mobile and password are required" });
   }
 
   try {
+    // Support login by email OR mobile number
     const [users] = await db.query(
-      "SELECT * FROM users WHERE email = ?",
-      [email]
+      "SELECT * FROM users WHERE email = ? OR mobile = ?",
+      [emailOrMobile, emailOrMobile]
     );
 
     if (users.length === 0) {
-      return res.status(401).json({ error: "Invalid email or password" });
+      return res.status(401).json({ error: "Invalid email/mobile or password" });
     }
 
     const user = users[0];
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      return res.status(401).json({ error: "Invalid email or password" });
+      return res.status(401).json({ error: "Invalid email/mobile or password" });
     }
 
     if (user.status !== "active") {
@@ -300,6 +301,44 @@ const updateUser = async (req, res) => {
   }
 };
 
+// PUT /api/users/:id/password - Change password
+const changePassword = async (req, res) => {
+  const { id } = req.params;
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: "Current password and new password are required" });
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: "New password must be at least 6 characters" });
+  }
+
+  try {
+    const [users] = await db.query("SELECT * FROM users WHERE id = ?", [id]);
+    if (users.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const user = users[0];
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ error: "Current password is incorrect" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await db.query(
+      "UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+      [hashedPassword, id]
+    );
+
+    return res.status(200).json({ message: "Password changed successfully" });
+  } catch (err) {
+    console.error("Change password error:", err);
+    return res.status(500).json({ error: "Database error" });
+  }
+};
+
 // DELETE /api/users/:id - Delete user
 const deleteUser = async (req, res) => {
   const { id } = req.params;
@@ -325,6 +364,7 @@ const userController = async (req, res) => {
   const isLogin = path === "/login" || req.url === "/login";
   const isProfileUpdate = path.includes("/profile") && !path.includes("/image");
   const isProfileImage = path.includes("/profile/image");
+  const isPasswordChange = path.includes("/password");
   const hasId = req.params && req.params.id;
 
   if (req.method === "POST" && isLogin) {
@@ -341,6 +381,10 @@ const userController = async (req, res) => {
 
   if (req.method === "GET") {
     return getAllUsers(req, res);
+  }
+
+  if (req.method === "PUT" && isPasswordChange && hasId) {
+    return changePassword(req, res);
   }
 
   if (req.method === "PUT" && isProfileImage && hasId) {
@@ -364,4 +408,3 @@ const userController = async (req, res) => {
 
 export default userController;
 export { upload };
-

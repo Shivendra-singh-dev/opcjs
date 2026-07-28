@@ -1,6 +1,6 @@
 import Link from "next/link";
 import styles from "./page.module.css";
-import Navbar from "../../components/navbar.js";
+import Navbar from "../../components/navbar";
 
 export default function About() {
   return (

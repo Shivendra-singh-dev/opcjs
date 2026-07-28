@@ -29,6 +29,7 @@ export default function ProfilePage() {
   // Image state
   const [profileImage, setProfileImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [imageError, setImageError] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -36,42 +37,60 @@ export default function ProfilePage() {
   // We'll use the first user from the list since there's no auth session
   const [currentUserId, setCurrentUserId] = useState(null);
 
-  // Fetch current user
+  // Fetch current user from localStorage
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
         setLoading(true);
-        // First, get users list and pick the first one (since no auth)
-        const res = await fetch("/api/users");
-        const users = await res.json();
-        if (Array.isArray(users) && users.length > 0) {
-          const firstUser = users[0];
-          setCurrentUserId(firstUser.id);
-          
-          // Now fetch full profile
-          const profileRes = await fetch(`/api/users/${firstUser.id}`);
-          const profileData = await profileRes.json();
-          
-          if (!profileRes.ok) {
-            setError(profileData.error || "Failed to load profile");
-          } else {
-            setUser(profileData);
-            setFormData({
-              name: profileData.name || "",
-              email: profileData.email || "",
-              mobile: profileData.mobile || "",
-              address: profileData.address || "",
-              city: profileData.city || "",
-              state: profileData.state || "",
-              zip_code: profileData.zip_code || "",
-              country: profileData.country || "",
-            });
-            if (profileData.profile_picture) {
-              setImagePreview(profileData.profile_picture);
-            }
+
+        // Get the logged-in user from localStorage
+        let userId = null;
+        try {
+          const stored = localStorage.getItem('loggedInUser');
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            userId = parsed.id;
           }
+        } catch (e) {
+          // ignore
+        }
+
+        if (!userId) {
+          // Fallback: get users list and pick the first one
+          const res = await fetch("/api/users");
+          const users = await res.json();
+          if (Array.isArray(users) && users.length > 0) {
+            userId = users[0].id;
+          } else {
+            setError("No users found. Please sign up first.");
+            setLoading(false);
+            return;
+          }
+        }
+
+        setCurrentUserId(userId);
+
+        // Now fetch full profile
+        const profileRes = await fetch(`/api/users/${userId}`);
+        const profileData = await profileRes.json();
+
+        if (!profileRes.ok) {
+          setError(profileData.error || "Failed to load profile");
         } else {
-          setError("No users found. Please sign up first.");
+          setUser(profileData);
+          setFormData({
+            name: profileData.name || "",
+            email: profileData.email || "",
+            mobile: profileData.mobile || "",
+            address: profileData.address || "",
+            city: profileData.city || "",
+            state: profileData.state || "",
+            zip_code: profileData.zip_code || "",
+            country: profileData.country || "",
+          });
+          if (profileData.profile_picture) {
+            setImagePreview(profileData.profile_picture);
+          }
         }
       } catch (err) {
         setError("Unable to connect to server.");
@@ -168,7 +187,6 @@ export default function ProfilePage() {
           state: formData.state,
           zip_code: formData.zip_code,
           country: formData.country,
-          // Send email/mobile to validate they haven't been changed
           email: formData.email,
           mobile: formData.mobile,
         }),
@@ -179,10 +197,6 @@ export default function ProfilePage() {
       if (res.ok) {
         setSuccess("Profile updated successfully");
         setUser(data.user);
-        // Upload image if selected
-        if (profileImage) {
-          await handleImageUpload();
-        }
       } else {
         setError(data.error || data.message || "Failed to update profile");
       }
@@ -237,11 +251,13 @@ export default function ProfilePage() {
             
             <div className={styles.imageSection}>
               <div className={styles.imageWrapper}>
-                {imagePreview ? (
+                {imagePreview && !imageError ? (
                   <img
                     src={imagePreview.startsWith("data:") ? imagePreview : imagePreview}
                     alt="Profile"
                     className={styles.profileImage}
+                    onError={() => setImageError(true)}
+                    onLoad={() => setImageError(false)}
                   />
                 ) : (
                   <div className={styles.imagePlaceholder}>

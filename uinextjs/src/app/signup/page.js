@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
-import Navbar from "../../components/navbar.js";
+import Navbar from "../../components/navbar";
 
 export default function Signup() {
   const router = useRouter();
