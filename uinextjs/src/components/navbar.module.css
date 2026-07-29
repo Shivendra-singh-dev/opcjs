@@ -1,113 +1,226 @@
 .navbar {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+  background: rgba(15, 12, 41, 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 0.8rem 0;
   position: sticky;
   top: 0;
   z-index: 1000;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 }
 
 .navContainer {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 1rem 2rem;
+  padding: 0 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
+/* Logo */
 .navLogo {
   display: flex;
   align-items: center;
 }
 
+.logoLink {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: white;
+}
+
+.logoIcon {
+  font-size: 1.5rem;
+  display: inline-block;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-3px); }
+}
+
+.logoText {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: white;
+}
+
+.logoHighlight {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Navigation Links */
 .navLinks {
   display: flex;
-  gap: 2rem;
+  list-style: none;
+  gap: 1.5rem;
   align-items: center;
+  margin: 0;
+  padding: 0;
+}
+
+.navItem {
+  display: inline-block;
 }
 
 .navLink {
+  color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
-  color: #2d3748;
+  font-size: 0.95rem;
   font-weight: 500;
-  font-size: 1rem;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
   transition: all 0.3s ease;
+  padding: 0.5rem 0;
   position: relative;
-}
-
-.navLink:hover {
-  color: #4299e1;
-  background: rgba(66, 153, 225, 0.08);
 }
 
 .navLink::after {
   content: '';
   position: absolute;
   bottom: 0;
-  left: 50%;
+  left: 0;
   width: 0;
   height: 2px;
-  background: #4299e1;
-  transition: all 0.3s ease;
-  transform: translateX(-50%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  transition: width 0.3s ease;
+}
+
+.navLink:hover {
+  color: white;
 }
 
 .navLink:hover::after {
-  width: 60%;
+  width: 100%;
 }
 
-.active {
-  color: #4299e1;
-}
-
-.active::after {
-  width: 60% !important;
-}
-
-.signupBtn {
-  background: linear-gradient(135deg, #4299e1, #667eea);
-  color: white !important;
+/* Sign In Button */
+.loginBtn {
   padding: 0.5rem 1.5rem;
+  background: transparent;
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.2);
   border-radius: 50px;
   font-weight: 600;
-  box-shadow: 0 4px 15px rgba(66, 153, 225, 0.3);
+  font-size: 0.95rem;
+  cursor: pointer;
   transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.loginBtn:hover {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Sign Up Button */
+.signupBtn {
+  display: inline-block;
+  padding: 0.6rem 1.8rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-decoration: none;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
 .signupBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(66, 153, 225, 0.4);
-  background: linear-gradient(135deg, #3182ce, #5a67d8);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
 }
 
-.signupBtn::after {
+/* Hamburger Menu */
+.hamburger {
   display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
 }
 
+.hamburgerLine {
+  width: 25px;
+  height: 2px;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
-  .navContainer {
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
+  .hamburger {
+    display: flex;
   }
 
   .navLinks {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.75rem;
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: rgba(15, 12, 41, 0.98);
+    backdrop-filter: blur(20px);
+    padding: 1.5rem;
+    gap: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .navLinksOpen {
+    display: flex;
+  }
+
+  .navItem {
+    width: 100%;
+    text-align: center;
   }
 
   .navLink {
-    font-size: 0.9rem;
-    padding: 0.4rem 0.8rem;
+    display: block;
+    padding: 0.8rem 0;
+    font-size: 1.1rem;
+  }
+
+  .navLink::after {
+    display: none;
+  }
+
+  .navLink:hover {
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 8px;
+  }
+
+  .loginBtn {
+    width: 100%;
+    padding: 0.8rem;
+    text-align: center;
   }
 
   .signupBtn {
-    padding: 0.4rem 1.2rem;
+    display: block;
+    text-align: center;
+    padding: 0.8rem;
+    width: 100%;
   }
 }
 
+@media (max-width: 480px) {
+  .logoText {
+    font-size: 1.1rem;
+  }
+  
+  .logoIcon {
+    font-size: 1.3rem;
+  }
+}

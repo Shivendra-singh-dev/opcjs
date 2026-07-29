@@ -1,19 +1,35 @@
 services:
-  php:
-    image: php:8.3-apache
-    ports:
-      - "8080:80"
-
-  mysql:
-    image: mysql:8
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: root
-
-  node:
-    image: node:24
-    working_dir: /app
+      MYSQL_DATABASE: ${DB_NAME:-opc_db}
+      MYSQL_USER: ${DB_USER:-opc_app}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-change-this-password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-change-root-password}
     volumes:
-      - ./:/app
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-change-root-password}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 15s
+
+  api:
+    build: .
+    restart: unless-stopped
+    environment:
+      PORT: 5000
+      DB_HOST: db
+      DB_NAME: ${DB_NAME:-opc_db}
+      DB_USER: ${DB_USER:-opc_app}
+      DB_PASSWORD: ${DB_PASSWORD:-change-this-password}
     ports:
-      - "3000:3000"
-    command: sh -c "npm install && npm start"
+      - "${API_PORT:-5000}:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  mysql_data:
