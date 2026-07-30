@@ -15,12 +15,15 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "helmet": "^8.3.0",
+    "html5-qrcode": "^2.3.8",
     "morgan": "^1.11.0",
     "mysql2": "^3.22.6",
     "next": "16.2.10",
+    "qrcode": "^1.5.4",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hook-form": "^7.81.0",
+    "react-qr-code": "^2.2.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

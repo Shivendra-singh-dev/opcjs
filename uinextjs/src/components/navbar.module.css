@@ -224,3 +224,82 @@
     font-size: 1.3rem;
   }
 }
+/* Add these styles to your existing navbar.module.css */
+
+/* Dropdown styles */
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  min-width: 200px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  padding: 8px 0;
+  list-style: none;
+  z-index: 1000;
+  animation: slideDown 0.3s ease;
+}
+
+.dropdownItem {
+  padding: 0;
+}
+
+.dropdownLink {
+  display: block;
+  padding: 10px 20px;
+  color: #333;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.dropdownLink:hover {
+  background: #f5f5f5;
+  color: #0070f3;
+  padding-left: 25px;
+}
+
+.dropdownArrow {
+  font-size: 10px;
+  margin-left: 5px;
+  transition: transform 0.3s ease;
+}
+
+/* Make navItem relative for dropdown positioning */
+.navItem {
+  position: relative;
+}
+
+/* Animation for dropdown */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile responsiveness for dropdown */
+@media (max-width: 768px) {
+  .dropdownMenu {
+    position: static;
+    box-shadow: none;
+    background: #f8f9fa;
+    padding-left: 20px;
+    border-radius: 0;
+    animation: none;
+  }
+  
+  .dropdownLink {
+    padding: 8px 15px;
+    font-size: 14px;
+  }
+  
+  .dropdownLink:hover {
+    padding-left: 20px;
+  }
+}

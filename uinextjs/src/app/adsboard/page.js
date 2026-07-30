@@ -5,10 +5,20 @@ import styles from './page.module.css';
 import Navbar from '@/components/navbar';
 import SocialSidebar from '@/components/SocialSidebar';
 import LoginModal from '@/components/LoginModal';
+import AdCreationModal from '@/components/AdCreationModal';
 
-export default function AdsPage() {
+export default function AdsBoard() {
+  // Demo calculation
+  let first = 20;
+  let second = 20;
+  var sub = first + second;
+
   // Login Modal State
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdCreationOpen, setIsAdCreationOpen] = useState(false);
+  const [ads, setAds] = useState([]);
+  const [selectedPlatform, setSelectedPlatform] = useState(null);
 
   const platforms = [
     { name: 'WhatsApp', icon: '💬', color: '#25D366' },
@@ -19,11 +29,59 @@ export default function AdsPage() {
     { name: 'LinkedIn', icon: '💼', color: '#0A66C2' },
   ];
 
+  const handleLogin = (userData) => {
+    setIsLoggedIn(true);
+    setIsLoginOpen(false);
+  };
+
+  const handleCreateAd = (adData) => {
+    const newAd = {
+      id: Date.now(),
+      ...adData,
+      createdAt: new Date().toISOString(),
+      status: 'draft'
+    };
+    setAds([newAd, ...ads]);
+    setIsAdCreationOpen(false);
+  };
+
+  const handleNewAdClick = () => {
+    if (!isLoggedIn) {
+      setIsLoginOpen(true);
+      return;
+    }
+    setIsAdCreationOpen(true);
+  };
+
+  const handlePlatformSelect = (platform) => {
+    setSelectedPlatform(platform);
+    if (isLoggedIn) {
+      setIsAdCreationOpen(true);
+    } else {
+      setIsLoginOpen(true);
+    }
+  };
+
   return (
     <>
-      <Navbar onLoginClick={() => setIsLoginOpen(true)} />
+      <Navbar 
+        onLoginClick={() => setIsLoginOpen(true)} 
+        isLoggedIn={isLoggedIn}
+        onLogout={() => setIsLoggedIn(false)}
+      />
       <SocialSidebar />
-      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+      <LoginModal 
+        isOpen={isLoginOpen} 
+        onClose={() => setIsLoginOpen(false)}
+        onLogin={handleLogin}
+      />
+      <AdCreationModal 
+        isOpen={isAdCreationOpen}
+        onClose={() => setIsAdCreationOpen(false)}
+        onCreateAd={handleCreateAd}
+        selectedPlatform={selectedPlatform}
+        platforms={platforms}
+      />
       
       <div className={styles.container}>
         {/* AI Header with Particle Effect */}
@@ -55,12 +113,22 @@ export default function AdsPage() {
         {/* Action Bar */}
         <div className={styles.actionBar}>
           <div className={styles.actionLeft}>
-            <span className={styles.actionLabel}>Create social-ready ads</span>
-            <span className={styles.actionSub}>Build a new ad or referral card with the right platform format.</span>
+            <span className={styles.actionLabel}>
+              {isLoggedIn ? `Welcome back! ${ads.length} ads created` : 'Create social-ready ads'}
+            </span>
+            <span className={styles.actionSub}>
+              {isLoggedIn 
+                ? `You have ${ads.filter(ad => ad.status === 'published').length} published ads`
+                : 'Build a new ad or referral card with the right platform format.'
+              }
+            </span>
           </div>
           <div className={styles.actionButtons}>
-            <button className={styles.primaryButton}>
-              <span>➕</span> New Ads
+            <button 
+              className={styles.primaryButton}
+              onClick={handleNewAdClick}
+            >
+              <span>➕</span> {isLoggedIn ? 'Create New Ad' : 'Login to Create Ad'}
             </button>
             <button className={styles.secondaryButton}>
               <span>🔗</span> Get Referral Link
@@ -74,15 +142,81 @@ export default function AdsPage() {
             {platforms.map((platform) => (
               <button
                 key={platform.name}
-                className={styles.platformButton}
+                className={`${styles.platformButton} ${selectedPlatform?.name === platform.name ? styles.activePlatform : ''}`}
                 style={{ '--platform-color': platform.color }}
+                onClick={() => handlePlatformSelect(platform)}
               >
                 <span className={styles.platformIcon}>{platform.icon}</span>
                 {platform.name}
+                {selectedPlatform?.name === platform.name && (
+                  <span className={styles.selectedBadge}>✓</span>
+                )}
               </button>
             ))}
           </div>
         </div>
+
+        {/* My Ads Section - Only visible when logged in */}
+        {isLoggedIn && (
+          <section className={styles.myAdsSection}>
+            <div className={styles.sectionHeader}>
+              <h2 className={styles.sectionTitle}>
+                <span className={styles.gradientText}>My</span> Ads
+              </h2>
+              <p className={styles.sectionSubtitle}>
+                Manage your created ads
+              </p>
+              <button 
+                className={styles.createAdButton}
+                onClick={() => setIsAdCreationOpen(true)}
+              >
+                + Create New Ad
+              </button>
+            </div>
+
+            <div className={styles.adsGrid}>
+              {ads.length > 0 ? (
+                ads.map((ad) => (
+                  <div key={ad.id} className={styles.adCard}>
+                    <div className={styles.adCardHeader}>
+                      <span className={styles.adPlatform}>{ad.platform}</span>
+                      <span className={`${styles.adStatus} ${styles[ad.status]}`}>
+                        {ad.status}
+                      </span>
+                    </div>
+                    <h3 className={styles.adTitle}>{ad.title}</h3>
+                    <p className={styles.adDescription}>{ad.description}</p>
+                    {ad.image && (
+                      <div className={styles.adImage}>
+                        <img src={ad.image} alt={ad.title} />
+                      </div>
+                    )}
+                    <div className={styles.adCardFooter}>
+                      <span className={styles.adDate}>
+                        {new Date(ad.createdAt).toLocaleDateString()}
+                      </span>
+                      <div className={styles.adActions}>
+                        <button className={styles.adActionButton}>Edit</button>
+                        <button className={styles.adActionButton}>Preview</button>
+                        <button className={styles.adActionButton}>Publish</button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className={styles.emptyState}>
+                  <div className={styles.emptyStateAnimation}>
+                    <span className={styles.emptyIcon}>📝</span>
+                  </div>
+                  <p className={styles.emptyStateTitle}>No ads created yet</p>
+                  <p className={styles.emptyStateText}>
+                    Click the &quot;Create New Ad&quot; button to get started
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* Creative Gallery */}
         <section className={styles.gallerySection}>
@@ -108,8 +242,11 @@ export default function AdsPage() {
               <p className={styles.emptyStateText}>
                 Create a new image ad and it will appear here after activation.
               </p>
-              <button className={styles.emptyStateButton}>
-                Create Your First Ad
+              <button 
+                className={styles.emptyStateButton}
+                onClick={handleNewAdClick}
+              >
+                {isLoggedIn ? 'Create Your First Ad' : 'Login to Create Ad'}
               </button>
             </div>
           </div>
@@ -191,7 +328,12 @@ export default function AdsPage() {
               <span className={styles.footerDivider}>|</span>
               <span className={styles.footerLang}>IN</span>
             </div>
-            
+            <div className={styles.footerCenter}>
+              <p className={styles.footerText}>Page 1 of 1</p>
+              <p className={styles.demoText}>
+                Demo: {first} + {second} = <span className={styles.demoResult}>{sub}</span>
+              </p>
+            </div>
             <div className={styles.footerRight}>
               <span className={styles.footerDate}>29-07-2026</span>
               <button className={styles.footerNext}>Next &gt;</button>

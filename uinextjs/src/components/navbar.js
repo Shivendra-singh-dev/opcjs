@@ -6,13 +6,20 @@ import styles from "./navbar.module.css";
 
 export default function Navbar({ onLoginClick }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isServicesOpen, setIsServicesOpen] = useState(false);
 
   const navItems = [
     { name: 'Home', href: '/' },
     { name: 'Dashboard', href: '/dashboard' },
     { name: 'About', href: '/about' },
-    { name: 'Ads', href: '/ads' },
     { name: 'Contact', href: '/contact' },
+  ];
+
+  const serviceItems = [
+    { name: 'Owner-Chat', href: '/owner-chat' },
+    { name: 'Ad-Create', href: '/ads' },
+    { name: 'SmartLib', href: '/smartlib' },
+    { name: 'Item 4', href: '/Item4' },
   ];
 
   return (
@@ -45,6 +52,29 @@ export default function Navbar({ onLoginClick }) {
               </Link>
             </li>
           ))}
+          
+          {/* Services Dropdown */}
+          <li 
+            className={styles.navItem}
+            onMouseEnter={() => setIsServicesOpen(true)}
+            onMouseLeave={() => setIsServicesOpen(false)}
+          >
+            <span className={styles.navLink}>
+              Services <span className={styles.dropdownArrow}>▼</span>
+            </span>
+            {isServicesOpen && (
+              <ul className={styles.dropdownMenu}>
+                {serviceItems.map((service) => (
+                  <li key={service.name} className={styles.dropdownItem}>
+                    <Link href={service.href} className={styles.dropdownLink}>
+                      {service.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+
           <li className={styles.navItem}>
             <button 
               onClick={() => {
