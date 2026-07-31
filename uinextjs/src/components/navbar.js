@@ -18,7 +18,7 @@ export default function Navbar({ onLoginClick }) {
   const serviceItems = [
     { name: 'Owner-Chat', href: '/owner-chat' },
     { name: 'Ad-Create', href: '/ads' },
-    { name: 'SmartLib', href: '/smartlib' },
+    { name: '📚SmartLib', href: '/smartlib' },
     { name: 'Item 4', href: '/Item4' },
   ];
 

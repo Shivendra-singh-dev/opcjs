@@ -1,4 +1,3 @@
-// app/owner-chat/page.js
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -501,7 +500,7 @@ export default function OwnerChatPage() {
           <ul>
             <li>Point your camera at the QR code on parking spot</li>
             <li>Auto-detect will identify the parking location</li>
-            <li>You'll be connected to the owner for reporting</li>
+            <li>You ll be connected to the owner for reporting</li>
           </ul>
         </div>
       </div>
