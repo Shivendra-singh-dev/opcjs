@@ -19,7 +19,7 @@ export default function Navbar({ onLoginClick }) {
     { name: 'Owner-Chat', href: '/owner-chat' },
     { name: 'Ad-Create', href: '/ads' },
     { name: '📚SmartLib', href: '/smartlib' },
-    { name: 'Item 4', href: '/Item4' },
+    { name: 'e-Learning', href: '/el' },
   ];
 
   return (

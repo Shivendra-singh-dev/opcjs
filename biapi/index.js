@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import productRoutes from './routes/products.js';
 import contactsRoutes from './routes/contacts.js';
+import qnsdtRoutes from './routes/qnsdt.js';
 import userRoutes from './routes/users.js';
 
 dotenv.config();
@@ -51,6 +52,7 @@ app.use('/api/products', productRoutes);
 
 // Contacts API
 app.use('/api/contacts', contactsRoutes);
+app.use('/api/qnsdt', qnsdtRoutes);
 
 // Users API (signup, list, update, delete)
 app.use('/api/users', userRoutes);

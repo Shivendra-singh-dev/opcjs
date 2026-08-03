@@ -1,0 +1,567 @@
+# Modern AI Learning Platform (Next.js + Node.js) - Complete UI & Feature Upgrade Prompt
+
+I have an existing project with:
+
+* **Frontend:** Next.js
+* **Backend:** Node.js + Express
+* **Database:** (Keep existing database and API structure unless improvement is required.)
+
+I want to completely redesign and upgrade this project into a **modern AI-powered Learning Management Platform** with an attractive UI and excellent user experience.
+
+## Design Requirements
+
+Create a premium modern UI similar to platforms like:
+
+* Coursera
+* Udemy
+* Notion
+* ChatGPT
+* Khan Academy
+* Physics Wallah
+* LeetCode
+
+Use:
+
+* Tailwind CSS
+* Framer Motion animations
+* Responsive Design
+* Dark/Light Mode
+* Glassmorphism
+* Soft shadows
+* Smooth transitions
+* Beautiful gradients
+* Modern cards
+* Professional typography
+* Mobile-first layout
+
+The website should look like a premium EdTech platform.
+
+---
+
+# Landing Page
+
+Create a highly attractive landing page including:
+
+* Hero section
+* Animated background
+* Search bar
+* Trending courses
+* Popular quizzes
+* Featured learning paths
+* AI Learning Assistant section
+* Categories
+* Testimonials
+* Statistics
+* Call-to-action
+* Footer
+
+If the user is not logged in:
+
+* Show Login button
+* Show Signup button
+* Hide Dashboard
+
+After login:
+
+* Redirect automatically to Dashboard.
+
+---
+
+# Authentication
+
+Implement a modern authentication system.
+
+Features:
+
+* Login
+* Signup
+* Forgot Password
+* Reset Password
+* Email Verification (optional)
+* JWT Authentication
+* Secure API
+* Protected Routes
+
+Top Navbar should display:
+
+* User Avatar
+* Name
+* Email
+* Notifications
+* Settings
+* Logout
+
+---
+
+# Dashboard
+
+Create a modern dashboard.
+
+Dashboard includes:
+
+* Welcome card
+* Learning Progress
+* Daily Goals
+* Continue Learning
+* Recent Activity
+* Quiz Performance
+* Saved Notes
+* Favorite Topics
+* AI Recommendations
+* Upcoming Mock Tests
+
+---
+
+# Sidebar
+
+Modern collapsible sidebar with icons.
+
+Sections:
+
+* Dashboard
+* My Notes
+* Question Bank
+* Quiz
+* Mock Tests
+* YouTube Learning
+* AI Learning
+* Bookmarks
+* Progress
+* Settings
+
+---
+
+# Question & Answer Management
+
+Users can save unlimited questions.
+
+Each question contains:
+
+* Title
+* Subject
+* Topic
+* Difficulty
+* Tags
+* Created Date
+
+Question Types:
+
+## 1. Descriptive
+
+Store:
+
+* Question
+* Long Answer
+* Images
+* Files
+* Notes
+* References
+
+Rich Text Editor Required.
+
+---
+
+## 2. Multiple Choice (MCQ)
+
+Store:
+
+* Question
+* Option A
+* Option B
+* Option C
+* Option D
+* Correct Answer
+* Explanation
+* Difficulty
+* Marks
+
+---
+
+## 3. True / False
+
+Store:
+
+* Question
+* Answer
+* Explanation
+
+---
+
+## 4. Fill in the Blank
+
+Store:
+
+* Question
+* Correct Answer
+* Explanation
+
+---
+
+User should be able to:
+
+* Add
+* Edit
+* Delete
+* Search
+* Filter
+* Sort
+* Bookmark
+* Share
+* Export
+
+---
+
+# Question List
+
+Sidebar displays all questions.
+
+Features:
+
+* Search
+* Filter by Subject
+* Filter by Topic
+* Filter by Difficulty
+* Favorite Questions
+* Recent Questions
+* Pagination
+* Infinite Scroll
+
+---
+
+# Quiz Module
+
+Create a professional quiz system.
+
+Support:
+
+* MCQ
+* Descriptive
+* Mixed Quiz
+
+Features:
+
+* Timer
+* Negative Marking
+* Instant Result
+* Leaderboard
+* Explanation
+* Retry Quiz
+* Save Progress
+* Performance Analytics
+
+---
+
+# AI Learning Assistant
+
+Integrate an AI assistant.
+
+Features:
+
+* Ask Questions
+* Explain Concepts
+* Summarize Notes
+* Generate Practice Questions
+* Solve Doubts
+* Recommend Topics
+* Personalized Learning Path
+
+---
+
+# YouTube Learning Module
+
+Create a dedicated Learning Videos page.
+
+Each item contains:
+
+* Thumbnail
+* Title
+* Description
+* Category
+* Subject
+* Instructor
+* Duration
+* Tags
+* Source Platform
+* External Link
+
+Supported sources:
+
+* YouTube
+* Vimeo
+* Google Drive
+* Any educational URL
+
+Hover Effect:
+
+When the user hovers over a video card:
+
+* Auto popup preview
+* Embedded video preview
+* Smooth animation
+* Play icon animation
+
+Clicking the card opens:
+
+* Full learning page
+* Embedded player
+* Related videos
+* Notes
+* Resources
+* Download links (if available)
+
+---
+
+# Notes System
+
+Users can create:
+
+* Markdown Notes
+* Rich Text Notes
+* Images
+* Code Blocks
+* Tables
+* Equations
+* Attachments
+
+Support:
+
+* Auto Save
+* Version History
+* Search
+* Favorites
+
+---
+
+# Progress Tracking
+
+Track:
+
+* Completed Lessons
+* Quiz Score
+* Time Spent
+* Weekly Progress
+* Monthly Progress
+* Streak
+* Learning Heatmap
+
+Charts:
+
+* Line Chart
+* Pie Chart
+* Bar Chart
+
+---
+
+# Search
+
+Global Search for:
+
+* Questions
+* Notes
+* Videos
+* Quizzes
+* Subjects
+* Topics
+
+Instant search with suggestions.
+
+---
+
+# Categories
+
+Support learning for:
+
+## School
+
+* Class 5
+* Class 6
+* Class 7
+* Class 8
+* Class 9
+* Class 10
+* Class 11
+* Class 12
+
+---
+
+## Competitive Exams
+
+* UPSC
+* IAS
+* SSC
+* CGL
+* CHSL
+* Banking
+* Railway
+* NDA
+* CDS
+* State PSC
+* Police
+* Defence
+
+---
+
+## IT & Programming
+
+* HTML
+* CSS
+* JavaScript
+* TypeScript
+* React
+* Next.js
+* Node.js
+* Express
+* MongoDB
+* SQL
+* Python
+* Java
+* C++
+* AI
+* Machine Learning
+* Data Science
+* DevOps
+* Cloud
+* Cyber Security
+* DSA
+* System Design
+
+---
+
+## Job Preparation
+
+* Interview Questions
+* Resume
+* Aptitude
+* HR Questions
+* Coding Practice
+* Soft Skills
+
+---
+
+# Admin Panel
+
+Admin can:
+
+* Manage Users
+* Manage Courses
+* Manage Videos
+* Manage Questions
+* Manage Notes
+* Manage Categories
+* Manage Quizzes
+* Manage Analytics
+* View Reports
+* Block Users
+
+---
+
+# Backend Improvements
+
+Node.js + Express APIs should include:
+
+* Authentication
+* CRUD APIs
+* Validation
+* Pagination
+* Filtering
+* Search
+* JWT Security
+* Role-based Access
+* File Upload
+* Error Handling
+* Logging
+* Rate Limiting
+
+---
+
+# Database
+
+Optimize database schema.
+
+Collections/Tables:
+
+* Users
+* Questions
+* Answers
+* Subjects
+* Topics
+* Videos
+* Notes
+* Quiz
+* Quiz Results
+* Bookmarks
+* Learning Progress
+* Notifications
+
+---
+
+# Performance
+
+Implement:
+
+* Lazy Loading
+* Image Optimization
+* Code Splitting
+* Server-side Rendering where appropriate
+* SEO Optimization
+* Skeleton Loading
+* Infinite Scroll
+* Caching
+* Fast API Responses
+
+---
+
+# UI Components
+
+Create reusable components:
+
+* Navbar
+* Sidebar
+* Cards
+* Modal
+* Drawer
+* Dialog
+* Toast
+* Loader
+* Table
+* Form
+* Pagination
+* Tabs
+* Accordion
+* Charts
+* Video Card
+* Quiz Card
+* Question Card
+
+---
+
+# Technology Stack
+
+Frontend:
+
+* Next.js (App Router)
+* TypeScript
+* Tailwind CSS
+* Shadcn/UI
+* Framer Motion
+* React Query / TanStack Query
+* React Hook Form
+* Zod
+* Zustand
+
+Backend:
+
+* Node.js
+* Express.js
+* MongoDB (Mongoose)
+* JWT Authentication
+* Multer
+* Bcrypt
+* Nodemailer
+* Swagger API Documentation
+
+---
+
+# Final Goal
+
+Build a complete, production-ready, scalable, responsive AI-powered Learning Management System that feels like a premium modern EdTech platform. The code should be clean, modular, reusable, well-commented, optimized, and follow best practices for both frontend and backend.

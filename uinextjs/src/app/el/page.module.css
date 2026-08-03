@@ -1,0 +1,35 @@
+.card {
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+}
+
+.gradientBtn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 30px;
+  font-weight: 600;
+  transition: transform 0.2s;
+}
+
+.gradientBtn:hover {
+  transform: scale(1.02);
+  color: white;
+}
+
+.gradientBtnReset {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  border: none;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 30px;
+  font-weight: 600;
+  transition: transform 0.2s;
+}
+
+.gradientBtnReset:hover {
+  transform: scale(1.02);
+  color: white;
+}
