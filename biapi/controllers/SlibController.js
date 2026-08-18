@@ -1,7 +1,6 @@
 import argon2 from "argon2";
 import db from "../config/db.js";
 
-
 export const getSlib = async (req, res) => {
   try {
     const [data] = await db.query("SELECT name,email,mobile,address,status,last_login,photo,created_at FROM slib_users");
@@ -103,7 +102,8 @@ export const deleteSlib = async (req, res) => {
     }
     return res.status(200).json({ success: true, message: "Record deleted successfully", });
   } catch (err) {
-    return res.status(500).json({ success: false, message: "Something went wrong", });
+    console.error("MySQL Error:", err);
+    return res.status(500).json({ success: false, message: "Something went wrong", error: err.message });
   }
 };
 
