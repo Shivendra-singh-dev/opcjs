@@ -68,8 +68,26 @@ export const createSlib = async (req, res) => {
   }
 };
 
-export const updateSlib = (req, res) => {
-  res.status(200).json({ success: true, message: 'Not implemented', data: req.body || {} });
+export const updateSlib = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, mobile, email, address,password } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ success: false, message: "ID is required" });
+    }
+    const passwordHash = await argon2.hash(password);
+    const [result] = await db.execute("UPDATE slib_users SET name = ?, mobile = ?, email = ?, address = ?, password_hash = ? WHERE id = ?", [name, mobile, email, address, passwordHash, id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: "Record not found" });
+    }
+
+    return res.status(200).json({ success: true, message: "Record updated successfully" });
+  } catch (err) {
+    console.error("MySQL Error:", err);
+    return res.status(500).json({ success: false, message: "Something went wrong", error: err.message });
+  }
 };
 
 export const deleteSlib = async (req, res) => {
