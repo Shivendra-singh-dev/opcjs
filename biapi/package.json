@@ -1,5 +1,5 @@
 {
-  "name": "nodejs_tuts",
+  "name": "Opcjs",
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
@@ -20,6 +20,7 @@
   "homepage": "https://github.com/Shivendra-singh-dev/NodejsTuts#readme",
   "description": "",
   "dependencies": {
+    "argon2": "^0.45.1",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
@@ -27,7 +28,6 @@
     "multer": "^2.2.0",
     "mysql2": "^3.22.5",
     "node": "^26.4.0",
-    "nodemon": "^3.1.14",
     "npm": "^11.18.0"
   }
 }

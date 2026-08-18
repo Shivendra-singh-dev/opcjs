@@ -6,6 +6,7 @@ import productRoutes from './routes/products.js';
 import contactsRoutes from './routes/contacts.js';
 import qnsdtRoutes from './routes/qnsdt.js';
 import userRoutes from './routes/users.js';
+import slibRoutes from './routes/slibRoutes.js';
 
 dotenv.config();
 
@@ -19,7 +20,7 @@ const PORT = process.env.PORT || 5000;
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Serve uploaded files
+// uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Enable CORS for frontend
@@ -34,46 +35,36 @@ app.use((req, res, next) => {
     next();
 });
 
+
 // Routes
-app.get('/', (req, res) => {
-    res.json({
-        message: 'CRUD API Server',
-        version: '1.0.0',
-        endpoints: {
-            products: '/api/products',
-            contacts: '/api/contacts',
-            users: '/api/users'
-        }
-    });
-});
+// app.get('/', (req, res) => {
+//     res.json({
+//         message: 'CRUD API Server',
+//         version: '1.0.0',
+//         endpoints: {
+//             products: '/api/products',
+//             contacts: '/api/contacts',
+//             users: '/api/users'
+//         }
+//     });
+// });
 
-// Product CRUD API
-app.use('/api/products', productRoutes);
 
-// Contacts API
 app.use('/api/contacts', contactsRoutes);
+app.use('/api/products', productRoutes);
 app.use('/api/qnsdt', qnsdtRoutes);
-
 // Users API (signup, list, update, delete)
 app.use('/api/users', userRoutes);
+app.use('/api/slib',slibRoutes)
 
 
 // 404 handler
 app.use((req, res) => {
-    res.status(404).json({
-        success: false,
-        message: 'Endpoint not found'
-    });
-});
+res.status(404).json({success: false,message: 'Endpoint not found'});});
 
 // Error handler
 app.use((err, req, res, next) => {
-    console.error(err);
-    res.status(500).json({
-        success: false,
-        message: 'Internal server error',
-        error: err.message
-    });
+    res.status(500).json({success: false,message: 'Internal server error',error: err.message});
 });
 
 app.listen(PORT, () => {

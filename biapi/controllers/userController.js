@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import db, { callbackDb } from "./db.js";
+import db from "../config/db.js";
 import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
