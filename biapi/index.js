@@ -1,12 +1,16 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import path from 'path';
+import session from 'express-session';
 import { fileURLToPath } from 'url';
+import authRoutes from './routes/auth.js';
 import productRoutes from './routes/products.js';
 import contactsRoutes from './routes/contacts.js';
-import qnsdtRoutes from './routes/qnsdt.js';
+import elRoutes from './routes/elRoutes.js';
 import userRoutes from './routes/users.js';
 import slibRoutes from './routes/slibRoutes.js';
+import slidersRoutes from './routes/slidersRoute.js';
+import pageRoutes from './routes/pageRoute.js';
 
 dotenv.config();
 
@@ -16,58 +20,68 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// ---------- Middleware ----------
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// uploaded files
+// Serve static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Enable CORS for frontend
+// CORS (allow credentials if using cookies)
 app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Origin', 'http://localhost:3000'); // or your frontend URL
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
-    // Handle preflight OPTIONS request
-    if (req.method === 'OPTIONS') {
-        return res.status(204).end();
-    }
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Cookie, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');   // needed for session cookies
+    if (req.method === 'OPTIONS') return res.status(204).end();
     next();
 });
 
+// ✅ **Add session middleware here** – BEFORE any routes that use session
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'shiva123',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: false,          // set to true if using HTTPS
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000 // 1 day
+    }
+}));
 
-// Routes
-// app.get('/', (req, res) => {
-//     res.json({
-//         message: 'CRUD API Server',
-//         version: '1.0.0',
-//         endpoints: {
-//             products: '/api/products',
-//             contacts: '/api/contacts',
-//             users: '/api/users'
-//         }
-//     });
-// });
-
-
+// ---------- API Routes ----------
+app.use('/api/auth', authRoutes);
 app.use('/api/contacts', contactsRoutes);
 app.use('/api/products', productRoutes);
-app.use('/api/qnsdt', qnsdtRoutes);
-// Users API (signup, list, update, delete)
+app.use('/api/el', elRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/slib',slibRoutes)
+app.use('/api/slib', slibRoutes);
+app.use('/api/sliders', slidersRoutes);
+app.use('/api/pagedt', pageRoutes);
 
-
-// 404 handler
-app.use((req, res) => {
-res.status(404).json({success: false,message: 'Endpoint not found'});});
-
-// Error handler
-app.use((err, req, res, next) => {
-    res.status(500).json({success: false,message: 'Internal server error',error: err.message});
+// ---------- Global Error Handling ----------
+app.use((req, res, next) => {
+    res.status(404);
+    if (req.accepts('html')) {
+        res.sendFile(path.join(__dirname, 'public', 'error.html'));
+    } else {
+        res.json({ success: false, message: 'Endpoint not found' });
+    }
 });
+
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(err.status || 500);
+    if (req.accepts('html')) {
+        res.sendFile(path.join(__dirname, 'public', 'error.html'));
+    } else {
+        res.json({ success: false, message: err.message || 'Internal Server Error' });
+    }
+});
+
+
 
 app.listen(PORT, () => {
     console.log(`✓ Server running on http://localhost:${PORT}`);
-    console.log(`✓ API Documentation: http://localhost:${PORT}/api/products`);
 });

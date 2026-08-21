@@ -110,7 +110,7 @@ export default function Smartlib() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/contact-create", {
+      const response = await fetch("/api/slib", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -137,7 +137,7 @@ export default function Smartlib() {
       <Navbar />
       <div className="container my-4">
         <div className="d-flex align-items-center gap-3 mb-4">
-          <h1 className="mb-0">📚 Smart Library</h1>
+          <h1 className="mb-0">📚 Smart System Lib</h1>
           <span className="badge bg-primary rounded-pill">New</span>
         </div>
 

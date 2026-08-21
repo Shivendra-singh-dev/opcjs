@@ -42,7 +42,7 @@ export default function Signup() {
     }
 
     try {
-      const endpoint = isLogin ? "/api/users/login" : "/api/users";
+      const endpoint = isLogin ? "/api/auth/login" : "/api/auth/signup";
       const body = isLogin
         ? { email: formData.email, password: formData.password }
         : {

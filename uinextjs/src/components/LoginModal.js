@@ -22,7 +22,7 @@ export default function LoginModal({ isOpen, onClose }) {
       return;
     }
     try {
-      const res = await fetch("/api/users/login", {
+      const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ emailOrMobile, password }),
