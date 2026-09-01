@@ -1,34 +1,33 @@
 import express from 'express';
-import userController from '../controllers/userController.js';
+import { getAllUsers,getUserByIdHandler,getUserProfile,updateUserProfile,updateProfileImage,updateUser,changePassword,deleteUser} from '../controllers/userController.js';
+import authMiddleware from "../middleware/authMiddleware.js";
+
 
 const router = express.Router();
 
-// User API
-// GET /api/users - List all users
-// POST /api/users - Create new user (signup)
-router.get('/', userController);
-router.post('/', userController);
 
-// POST /api/users/login - Login
-router.post('/login', userController);
+// Protected routes (authentication required - add auth middleware)
+// GET /api/users - List all users (with pagination)
+// router.get('/', getAllUsers);
 
 // GET /api/users/:id - Get single user
-router.get('/:id', userController);
+router.get('/:id', authMiddleware, getUserByIdHandler);
 
 // PUT /api/users/:id - Update user (admin role update)
-router.put('/:id', userController);
+router.put('/:id', authMiddleware, updateUser);
 
+// get /api/users/:id/profile - get user profile
+router.get('/:id/profile', authMiddleware, getUserProfile);
 // PUT /api/users/:id/profile - Update user profile
-router.put('/:id/profile', userController);
+router.put('/:id/profile', authMiddleware, updateUserProfile);
 
 // PUT /api/users/:id/profile/image - Update profile picture
-router.put('/:id/profile/image', userController);
+router.put('/:id/profile/image', authMiddleware, updateProfileImage);
 
 // PUT /api/users/:id/password - Change password
-router.put('/:id/password', userController);
+router.put('/:id/password', authMiddleware, changePassword);
 
 // DELETE /api/users/:id - Delete user
-router.delete('/:id', userController);
+router.delete('/:id', authMiddleware, deleteUser);
 
 export default router;
-

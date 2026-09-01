@@ -41,7 +41,9 @@ const kpis = [
 const chartSeries = [18, 22, 16, 28, 24, 30, 27];
 const aiPredictions = [75, 82, 68, 90, 85, 78, 92];
 
+
 export default function DashboardPage() {
+
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -139,6 +141,7 @@ export default function DashboardPage() {
       {/* Page header */}
       <div className={styles.header}>
         <div>
+          
           <div className={styles.titleRow}>
             <h1 className={styles.title}>AI Dashboard</h1>
             <span className={styles.liveBadge}>● Live</span>
@@ -170,9 +173,7 @@ export default function DashboardPage() {
                 <span className={styles.kpiIcon}>{k.icon}</span>
                 <span className={styles.kpiLabel}>{k.label}</span>
               </div>
-              <div
-                className={`${styles.kpiDelta} ${k.tone === "up" ? styles.up : styles.down}`}
-              >
+              <div className={`${styles.kpiDelta} ${k.tone === "up" ? styles.up : styles.down}`}>
                 {k.delta}
               </div>
             </div>
@@ -471,7 +472,7 @@ export default function DashboardPage() {
           <div className={styles.footerTitle}>🤖 AI Assistant Ready</div>
           <div className={styles.footerText}>
             Ask me anything about your data, predictions, or system status. 
-            I'm here to help you make better decisions.
+            I m here to help you make better decisions.
           </div>
           <button className={styles.footerBtn}>
             <span>Start AI Chat</span>

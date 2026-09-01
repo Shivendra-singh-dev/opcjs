@@ -1,90 +1,188 @@
-import db from "../config/db.js";
-import bcrypt from 'bcrypt';
-// import session from "express-session"; // (used for session middleware, not directly here)
+import bcrypt from "bcrypt";
+import userModel from "../models/userModel.js";
 
+export const getSessionUser = async (req, res) => {
+    if (!req.session || !req.session.isLoggedIn || !req.session.user) {
+        return res.status(401).json({
+            message: "Please login first",
+            user: null
+        });
+    }
+
+    return res.status(200).json({
+        user: req.session.user
+    });
+};
+
+export const logout = async (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            console.error("Session destroy error:", err);
+            return res.status(500).json({
+                message: "Could not logout"
+            });
+        }
+
+        res.clearCookie("connect.sid");
+        return res.status(200).json({
+            status: "success",
+            message: "Logout successful"
+        });
+    });
+};
+
+/**
+ * LOGIN
+ */
 export const Login = async (req, res) => {
     try {
         const { emailOrMobile, password } = req.body;
 
-        // Find user by email or mobile
-        const [rows] = await db.query(
-            "SELECT * FROM users WHERE email = ? OR mobile = ?",
-            [emailOrMobile, emailOrMobile]
+        // 1. Validate input
+        if (!emailOrMobile || !password) {
+            return res.status(400).json({
+                message: "Email/mobile and password are required"
+            });
+        }
+
+        // 2. Find user by email or mobile
+        const user = await userModel.loginUser(emailOrMobile);
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        // 3. Verify password
+        const isMatch = await bcrypt.compare(
+            password,
+            user.password
         );
 
-        if (rows.length === 0) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        const user = rows[0];
-
-        // Verify password
-        const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(401).json({ message: "Invalid credentials" });
+            return res.status(401).json({
+                message: "Invalid credentials"
+            });
         }
 
-        // Store user details in session (use correct column name: 'name')
-        req.session.user = {
-            id: user.id,            // ✅'10001'+ in future use the 
-            name: user.name,          // ✅ changed from user.fname
-            mobile: user.mobile,
-            email: user.email
-        };
-        req.session.isLoggedIn = true;
-
-        // Save session before responding
-        req.session.save((err) => {
+        // 4. Regenerate session after successful login
+        req.session.regenerate((err) => {
             if (err) {
-                console.error("Session save error:", err);
-                return res.status(500).json({ message: "Could not create session" });
+                console.error("Session regenerate error:", err);
+
+                return res.status(500).json({
+                    message: "Could not create session"
+                });
             }
-            return res.status(200).json({
-                message: "Login successful",
-                user: req.session.user
+
+            // 5. Store user information in session
+            req.session.user = {
+                id: user.id,
+                name: user.name,
+                mobile: user.mobile,
+                email: user.email
+            };
+
+            req.session.isLoggedIn = true;
+
+            // 6. Save session
+            req.session.save((err) => {
+                if (err) {
+                    console.error("Session save error:", err);
+
+                    return res.status(500).json({
+                        message: "Could not save session"
+                    });
+                }
+
+                const loggedInUser = {
+                    id: user.id,
+                    name: user.name,
+                    mobile: user.mobile,
+                    email: user.email
+                };
+
+                req.session.user = loggedInUser;
+                req.session.isLoggedIn = true;
+
+                return res.status(200).json({
+                    status: "success",
+                    message: "Login successful",
+                    user: loggedInUser
+                });
             });
         });
 
-    } catch (err) {
-        console.error(err);
+    } catch (error) {
+        console.error("Login error:", error);
+
         return res.status(500).json({
-            message: "Error occurred while logging in",
-            error: err.message
+            message: "Error occurred while logging in"
         });
     }
 };
 
+
+/**
+ * SIGNUP
+ */
 export const signup = async (req, res) => {
     try {
-        const { name, mobile, email, password } = req.body;
+        const {
+            name,
+            mobile,
+            email,
+            password
+        } = req.body;
 
-        // Check if user already exists (optional but recommended)
-        const [existing] = await db.query(
-            "SELECT id FROM users WHERE email = ? OR mobile = ?",
-            [email, mobile]
-        );
-        if (existing.length > 0) {
-            return res.status(409).json({ message: "User already exists" });
+        // 1. Validate input
+        if (!name || !mobile || !email || !password) {
+            return res.status(400).json({
+                message: "Name, mobile, email and password are required"
+            });
         }
 
-        const hash_password = await bcrypt.hash(password, 10); // increased salt rounds for better security
+        // 2. Check whether email already exists
+        const existingEmail = await userModel.getUserByEmail(email);
 
-        // Insert new user
-        const [result] = await db.query(
-            "INSERT INTO users (name, mobile, email, password) VALUES (?, ?, ?, ?)",
-            [name, mobile, email, hash_password]
-        );
+        if (existingEmail) {
+            return res.status(409).json({
+                message: "Email already registered"
+            });
+        }
 
+        // 3. Check whether mobile already exists
+        const existingMobile = await userModel.getUserByMobile(mobile);
+
+        if (existingMobile) {
+            return res.status(409).json({
+                message: "Mobile number already registered"
+            });
+        }
+
+        // 4. Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // 5. Create user
+        const user = await userModel.signupUser({
+            name,
+            mobile,
+            email,
+            password: hashedPassword
+        });
+
+        // 6. Response
         return res.status(201).json({
             message: "User signed up successfully",
-            userId: result.insertId
+            userId: user.id
         });
 
     } catch (error) {
-        console.error(error);
+        console.error("Signup error:", error);
+
         return res.status(500).json({
-            message: "Error occurred while signing up",
-            error: error.message
+            message: "Error occurred while signing up"
         });
     }
 };

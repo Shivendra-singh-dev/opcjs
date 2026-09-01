@@ -97,7 +97,7 @@ export default function Home() {
   // ---------- API calls ----------
   const fetchQuestions = async () => {
     try {
-      const res = await fetch('/api/qnsdt?limit=1000&page=1&sort=DESC');
+      const res = await fetch('/api/el?limit=1000&page=1&sort=DESC');
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
       const fetched = Array.isArray(data.data)
@@ -154,7 +154,7 @@ export default function Home() {
       status: status.toLowerCase() === 'inactive' ? 'inactive' : 'active',
     };
 
-    const url = editingId ? `/api/qnsdt/${editingId}` : '/api/qnsdt';
+    const url = editingId ? `/api/el/${editingId}` : '/api/el';
     const method = editingId ? 'PUT' : 'POST';
 
     setSaving(true);
@@ -232,7 +232,7 @@ export default function Home() {
   const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to delete this question?')) return;
     try {
-      const res = await fetch(`/api/qnsdt/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/el/${id}`, { method: 'DELETE' });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.message || 'Delete failed');
       await fetchQuestions();

@@ -1,6 +1,5 @@
 ﻿﻿"use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import SocialSidebar from "@/components/SocialSidebar";
@@ -18,16 +17,17 @@ export default function Home() {
       <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
 
       <main className={styles.main}>
-        <div className={styles.hero}>
+        <section className={styles.hero}>
           <div className={styles.heroContent}>
+            <span className={styles.kicker}>Creative growth platform</span>
             <h1 className={styles.heroTitle}>
-              Welcome to Our<br />
-              <span className={styles.highlight}>Modern Platform</span>
+              Turn ideas into
+              <span className={styles.highlight}> high-impact ads</span>
             </h1>
             <p className={styles.heroDescription}>
-              Build amazing experiences with Next.js and modern UI components.
-              Get started quickly with our pre-built templates.
+              Launch polished campaigns, build smart content workflows, and scale your brand with a streamlined platform that keeps marketing simple and fast.
             </p>
+
             <div className={styles.heroButtons}>
               <button onClick={() => setLoginOpen(true)} className={styles.loginBtn}>
                 Login
@@ -41,36 +41,66 @@ export default function Home() {
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </Link>
-              <Link href="/about" className={styles.secondaryBtn}>
-                Learn More
-              </Link>
+            </div>
+
+            <div className={styles.heroStats}>
+              <div className={styles.statCard}>
+                <strong>120K+</strong>
+                <span>campaigns launched</span>
+              </div>
+              <div className={styles.statCard}>
+                <strong>4.9/5</strong>
+                <span>customer rating</span>
+              </div>
             </div>
           </div>
 
-          <div className={styles.heroImage}>
-            <div className={styles.imagePlaceholder}>
-              <Image src="/vercel.svg" alt="Hero illustration" width={200} height={200} className={styles.heroIllustration} />
+          <div className={styles.heroVisual} aria-hidden="true">
+            <div className={`${styles.orb} ${styles.orbOne}`} />
+            <div className={`${styles.orb} ${styles.orbTwo}`} />
+            <div className={styles.dashboardCard}>
+              <div className={styles.cardTopbar}>
+                <span className={styles.dot} />
+                <span className={styles.dot} />
+                <span className={styles.dot} />
+              </div>
+              <div className={styles.cardBody}>
+                <div className={styles.metricRow}>
+                  <div>
+                    <p>Reach</p>
+                    <h3>2.4M</h3>
+                  </div>
+                  <span className={styles.pill}>+18.2%</span>
+                </div>
+                <div className={styles.graph}>
+                  <span className={styles.bar1} />
+                  <span className={styles.bar2} />
+                  <span className={styles.bar3} />
+                  <span className={styles.bar4} />
+                  <span className={styles.bar5} />
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div className={styles.features}>
+        <section className={styles.features}>
           <div className={styles.featureCard}>
             <div className={styles.featureIcon}>🚀</div>
             <h3>Fast &amp; Reliable</h3>
-            <p>Built on Next.js for optimal performance and SEO</p>
+            <p>Built for quick launches and efficient team workflows.</p>
           </div>
           <div className={styles.featureCard}>
             <div className={styles.featureIcon}>🎨</div>
             <h3>Modern UI</h3>
-            <p>Beautiful components with smooth animations</p>
+            <p>Clean, premium experiences designed to convert attention.</p>
           </div>
           <div className={styles.featureCard}>
             <div className={styles.featureIcon}>🔒</div>
             <h3>Secure</h3>
-            <p>Enterprise-grade security out of the box</p>
+            <p>Safe access, trusted tools, and a scalable platform.</p>
           </div>
-        </div>
+        </section>
       </main>
     </div>
   );

@@ -1,5 +1,4 @@
-import { callbackDb } from '../db.js';
-const db = callbackDb;
+import db from '../config/db.js';
 
 // Get all products
 export const getAllProducts = (callback) => {

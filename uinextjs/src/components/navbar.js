@@ -10,7 +10,6 @@ export default function Navbar({ onLoginClick }) {
 
   const navItems = [
     { name: 'Home', href: '/' },
-    { name: 'Dashboard', href: '/dashboard' },
     { name: 'About', href: '/about' },
     { name: 'Contact', href: '/contact' },
   ];

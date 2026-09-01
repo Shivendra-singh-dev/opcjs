@@ -1,30 +1,31 @@
-'use client'
+'use client';
 
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
 
 export default function ProfilePage() {
   const router = useRouter();
 
-  // User data state
+  // User data
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
 
-  // Form state
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    mobile: "",
-    address: "",
-    city: "",
-    state: "",
-    zip_code: "",
-    country: "",
-  });
+ // Form data
+    const [formData, setFormData] = useState({
+        name: "",
+        email: "",
+        mobile: "",
+        address: "",
+        city: "",
+        state: "",
+        zip_code: "",
+        country: "",
+    });
 
   // Image state
   const [profileImage, setProfileImage] = useState(null);
@@ -33,74 +34,101 @@ export default function ProfilePage() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef(null);
 
+
+  
   // Current user ID (hardcoded to 1 for now - in production would come from auth)
   // We'll use the first user from the list since there's no auth session
+
+  // Fetch current user from localStorage check first sesion or cookie for user ID, if not found, fetch from API
   const [currentUserId, setCurrentUserId] = useState(null);
 
-  // Fetch current user from localStorage
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
         setLoading(true);
+        setError("");
 
-        // Get the logged-in user from localStorage
         let userId = null;
+        let storedUser = null;
+
         try {
-          const stored = localStorage.getItem('loggedInUser');
-          if (stored) {
-            const parsed = JSON.parse(stored);
-            userId = parsed.id;
+          const savedUser = localStorage.getItem("loggedInUser");
+          if (savedUser) {
+            storedUser = JSON.parse(savedUser);
+            userId = storedUser?.id;
           }
-        } catch (e) {
-          // ignore
+        } catch (err) {
+          console.warn("Could not parse loggedInUser from localStorage:", err);
         }
 
         if (!userId) {
-          // Fallback: get users list and pick the first one
-          const res = await fetch("/api/users");
-          const users = await res.json();
-          if (Array.isArray(users) && users.length > 0) {
-            userId = users[0].id;
-          } else {
-            setError("No users found. Please sign up first.");
-            setLoading(false);
+          const sessionRes = await fetch("/api/auth/session", {
+            credentials: "include",
+            method: "GET",
+          });
+
+          if (!sessionRes.ok) {
+            router.push("/");
             return;
           }
-        }
 
-        setCurrentUserId(userId);
-
-        // Now fetch full profile
-        const profileRes = await fetch(`/api/users/${userId}`);
-        const profileData = await profileRes.json();
-
-        if (!profileRes.ok) {
-          setError(profileData.error || "Failed to load profile");
-        } else {
-          setUser(profileData);
-          setFormData({
-            name: profileData.name || "",
-            email: profileData.email || "",
-            mobile: profileData.mobile || "",
-            address: profileData.address || "",
-            city: profileData.city || "",
-            state: profileData.state || "",
-            zip_code: profileData.zip_code || "",
-            country: profileData.country || "",
-          });
-          if (profileData.profile_picture) {
-            setImagePreview(profileData.profile_picture);
+          const sessionData = await sessionRes.json();
+          userId = sessionData?.user?.id;
+          if (sessionData?.user) {
+            localStorage.setItem("loggedInUser", JSON.stringify(sessionData.user));
+            storedUser = sessionData.user;
           }
         }
-      } catch (err) {
-        setError("Unable to connect to server.");
+
+        if (!userId) {
+          setError("User session not found. Please log in again.");
+          setLoading(false);
+          return;
+        }
+
+        const response = await fetch(`/api/users/${userId}`, {
+          method: "GET",
+          credentials: "include",
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            router.push("/");
+            return;
+          }
+          throw new Error(data?.error || "Failed to fetch profile");
+        }
+
+        const profileData = data.data || data.user || data;
+        setCurrentUserId(userId);
+        setUser(profileData);
+
+        setFormData({
+          name: profileData.name || storedUser?.name || "",
+          email: profileData.email || storedUser?.email || "",
+          mobile: profileData.mobile || storedUser?.mobile || "",
+          address: profileData.address || "",
+          city: profileData.city || "",
+          state: profileData.state || "",
+          zip_code: profileData.zip_code || "",
+          country: profileData.country || "",
+        });
+
+        if (profileData.profile_picture) {
+          setImagePreview(profileData.profile_picture.startsWith("http") ? profileData.profile_picture : profileData.profile_picture);
+        }
+      } catch (error) {
+        console.error("Get user error:", error);
+        setError(error.message || "Unable to connect to server.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchCurrentUser();
-  }, []);
+  }, [router]);
 
   // Handle input change
   const handleChange = (e) => {
@@ -149,11 +177,12 @@ export default function ProfilePage() {
 
       const res = await fetch(`/api/users/${currentUserId}/profile/image`, {
         method: "PUT",
+        credentials: "include",
         body: formData,
       });
 
       const data = await res.json();
-
+      console.log("profile Image Data : ",data);
       if (res.ok) {
         setSuccess("Profile picture updated successfully");
         setProfileImage(null);
@@ -179,6 +208,7 @@ export default function ProfilePage() {
 
       const res = await fetch(`/api/users/${currentUserId}/profile`, {
         method: "PUT",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: formData.name,
@@ -193,7 +223,7 @@ export default function ProfilePage() {
       });
 
       const data = await res.json();
-
+      console.log('profile data : ',data);
       if (res.ok) {
         setSuccess("Profile updated successfully");
         setUser(data.user);
@@ -252,9 +282,12 @@ export default function ProfilePage() {
             <div className={styles.imageSection}>
               <div className={styles.imageWrapper}>
                 {imagePreview && !imageError ? (
-                  <img
-                    src={imagePreview.startsWith("data:") ? imagePreview : imagePreview}
+                  <Image
+                    src={imagePreview}
                     alt="Profile"
+                    width={200}
+                    height={200}
+                    unoptimized
                     className={styles.profileImage}
                     onError={() => setImageError(true)}
                     onLoad={() => setImageError(false)}
@@ -265,31 +298,16 @@ export default function ProfilePage() {
                   </div>
                 )}
                 <div className={styles.imageOverlay}>
-                  <button
-                    type="button"
-                    className={styles.changePhotoBtn}
-                    onClick={() => fileInputRef.current?.click()}
-                  >
+                  <button  type="button"  className={styles.changePhotoBtn}  onClick={() => fileInputRef.current?.click()}>
                     📷 Change Photo
                   </button>
                 </div>
               </div>
-              <input
-                type="file"
-                ref={fileInputRef}
-                className={styles.fileInput}
-                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-                onChange={handleImageSelect}
-              />
+              <input type="file" ref={fileInputRef} className={styles.fileInput} accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" onChange={handleImageSelect}/>
               {profileImage && (
                 <div className={styles.imageActions}>
                   <span className={styles.fileName}>{profileImage.name}</span>
-                  <button
-                    type="button"
-                    className={styles.uploadBtn}
-                    onClick={handleImageUpload}
-                    disabled={uploadingImage}
-                  >
+                  <button type="button" className={styles.uploadBtn} onClick={handleImageUpload} disabled={uploadingImage}>
                     {uploadingImage ? "Uploading..." : "Upload Image"}
                   </button>
                 </div>
@@ -309,16 +327,7 @@ export default function ProfilePage() {
               <label className={styles.label} htmlFor="name">Full Name</label>
               <div className={styles.inputWrapper}>
                 <span className={styles.inputIcon}>👤</span>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  className={styles.input}
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="Enter your full name"
-                  required
-                />
+                <input type="text" id="name" name="name" className={styles.input} value={formData.name} onChange={handleChange} placeholder="Enter your full name" required />
               </div>
             </div>
 
@@ -329,15 +338,7 @@ export default function ProfilePage() {
               </label>
               <div className={styles.inputWrapper}>
                 <span className={styles.inputIcon}>✉️</span>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  className={`${styles.input} ${styles.inputReadonly}`}
-                  value={formData.email}
-                  readOnly
-                  tabIndex={-1}
-                />
+                <input type="email" id="email" name="email" className={`${styles.input} ${styles.inputReadonly}`} value={formData.email} readOnly tabIndex={-1} />
               </div>
               <span className={styles.fieldHint}>Primary email cannot be changed. Contact support for changes.</span>
             </div>
@@ -349,15 +350,7 @@ export default function ProfilePage() {
               </label>
               <div className={styles.inputWrapper}>
                 <span className={styles.inputIcon}>📱</span>
-                <input
-                  type="tel"
-                  id="mobile"
-                  name="mobile"
-                  className={`${styles.input} ${styles.inputReadonly}`}
-                  value={formData.mobile}
-                  readOnly
-                  tabIndex={-1}
-                />
+                <input type="tel" id="mobile" name="mobile" className={`${styles.input} ${styles.inputReadonly}`} value={formData.mobile} readOnly tabIndex={-1} />
               </div>
               <span className={styles.fieldHint}>Primary mobile cannot be changed. Contact support for changes.</span>
             </div>
@@ -463,11 +456,7 @@ export default function ProfilePage() {
           >
             Cancel
           </button>
-          <button
-            type="submit"
-            className={styles.saveBtn}
-            disabled={saving || !currentUserId}
-          >
+          <button type="submit" className={styles.saveBtn} disabled={saving || !currentUserId} >
             {saving ? (
               <>
                 <span className={styles.btnSpinner} />

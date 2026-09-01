@@ -17,21 +17,61 @@ export default function DashboardLayout({ children }) {
     { href: '/dashboard', label: 'Dashboard', icon: '📊' },
     { href: '/dashboard/contacts', label: 'Contacts', icon: '📞' },
     { href: '/dashboard/users', label: 'Users', icon: '👤' },
+    { href: '/dashboard/leads', label: 'Leads', icon: '📋' },
+    { href: '/dashboard/deals', label: 'Deals', icon: '💼' },
+    { href: '/dashboard/loans', label: 'Loans', icon: '🏦' },
+    { href: '/dashboard/insurance', label: 'Insurance', icon: '🛡️' },
+    { href: '/dashboard/services', label: 'Services', icon: '🔧'}, 
+    { href: '/dashboard/utilities', label: 'Utilities', icon: '💡'},
+    { href: '/dashboard/pay', label: 'Payments', icon: '💳'}, 
+    { href: '/dashboard/eshop', label: 'E-Shop', icon: '🛍️'}, 
+    { href: '/dashboard/epark', label: 'E-Park', icon: '🚗'}, 
+    { href: '/dashboard/smartlib', label: 'Smart Library', icon: '📚'}, 
+    { href: '/dashboard/gallary', label: 'Gallery', icon: '🖼️'}, 
+    { href: '/dashboard/teams', label: 'Teams', icon: '👥'}, 
+    { href: '/dashboard/newsletter', label: 'Newsletter', icon: '📰'}, 
+    { href: '/dashboard/affiliates', label: 'Affiliates', icon: '👥'}, 
+    { href: '/dashboard/elearning', label: 'E-Learning', icon: '🎓'}, 
     { href: '/dashboard/profile', label: 'Profile', icon: '👤' },
     { href: '/dashboard/setting', label: 'Settings', icon: '⚙️' },
   ];
-
-  // Load user from localStorage on mount
+  
+  // Load user from session or localStorage on mount
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('loggedInUser');
-      if (stored) {
-        setLoggedInUser(JSON.parse(stored));
+    const loadUser = async () => {
+      try {
+        const stored = localStorage.getItem('loggedInUser');
+        if (stored) {
+          setLoggedInUser(JSON.parse(stored));
+          return;
+        }
+
+        const res = await fetch('/api/auth/session', { credentials: 'include' });
+        if (!res.ok) {
+          localStorage.removeItem('loggedInUser');
+          setLoggedInUser(null);
+          if (pathname.startsWith('/dashboard')) {
+            router.replace('/');
+          }
+          return;
+        }
+
+        const data = await res.json();
+        if (data?.user) {
+          localStorage.setItem('loggedInUser', JSON.stringify(data.user));
+          setLoggedInUser(data.user);
+        }
+      } catch (e) {
+        localStorage.removeItem('loggedInUser');
+        setLoggedInUser(null);
+        if (pathname.startsWith('/dashboard')) {
+          router.replace('/');
+        }
       }
-    } catch (e) {
-      // ignore
-    }
-  }, []);
+    };
+
+    loadUser();
+  }, [pathname, router]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -44,10 +84,21 @@ export default function DashboardLayout({ children }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setProfileOpen(false);
+
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (e) {
+      // ignore server logout failure and still clear local state
+    }
+
     localStorage.removeItem('loggedInUser');
-    router.push('/');
+    setLoggedInUser(null);
+    router.replace('/');
   };
 
   const handleProfileClick = () => {
@@ -93,8 +144,8 @@ export default function DashboardLayout({ children }) {
         {/* AI Status */}
         <div className={styles.aiStatus}>
           <div className={styles.aiPulse} />
-          <span className={styles.aiText}>AI System Online</span>
-          <span className={styles.aiBadge}>v3.2</span>
+          <span className={styles.aiText}>AI Dashboard Online</span>
+          <span className={styles.aiBadge}>v1.0</span>
         </div>
 
         {/* Navigation */}
@@ -146,11 +197,7 @@ export default function DashboardLayout({ children }) {
             <div className={styles.topbarActions}>
               <div className={styles.searchWrap}>
                 <span className={styles.searchIcon}>🔍</span>
-                <input
-                  type="text"
-                  className={styles.searchInput}
-                  placeholder="Search anything..."
-                />
+                <input type="text" className={styles.searchInput} placeholder="Search anything..." />
                 <span className={styles.searchShortcut}>⌘K</span>
               </div>
 
@@ -203,7 +250,6 @@ export default function DashboardLayout({ children }) {
             </div>
           </div>
         </div>
-
         {/* Page Content */}
         <main className={styles.main}>
           {children}

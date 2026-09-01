@@ -25,15 +25,18 @@ export default function LoginModal({ isOpen, onClose }) {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ emailOrMobile, password }),
       });
       const data = await res.json();
+      console.log(data);
       if (res.ok) {
         localStorage.setItem("loggedInUser", JSON.stringify(data.user));
+        console.log("Logged in user:", data.user);
         onClose();
         router.push("/dashboard");
       } else {
-        setError(data.error || "Invalid email/mobile or password");
+        setError(data.message || data.error || "Invalid email/mobile or password");
       }
     } catch (err) {
       setError("Unable to connect to the server.");

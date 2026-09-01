@@ -1,12 +1,6 @@
 import express from 'express';
-import {
-    listQuestions,
-    getQuestion,
-    createQuestionHandler,
-    updateQuestionHandler,
-    deleteQuestionHandler
-} from '../controllers/qnsdtController.js';
-import { validateQuestion } from '../middleware/qnsdtValidation.js';
+import { listQuestions, getQuestion, createQuestionHandler, updateQuestionHandler, deleteQuestionHandler } from '../controllers/qnsdtController.js';
+import { validateQuestion } from '../middleware/qnsdtValidationMiddleware.js';
 
 const router = express.Router();
 
