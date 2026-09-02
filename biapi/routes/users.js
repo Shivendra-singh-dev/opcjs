@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllUsers,getUserByIdHandler,getUserProfile,updateUserProfile,updateProfileImage,updateUser,changePassword,deleteUser} from '../controllers/userController.js';
+import { createUser,getAllUsers,getUserByIdHandler,getUserProfile,updateUserProfile,updateProfileImage,updateUser,changePassword,deleteUser} from '../controllers/userController.js';
 import authMiddleware from "../middleware/authMiddleware.js";
 
 
@@ -8,7 +8,8 @@ const router = express.Router();
 
 // Protected routes (authentication required - add auth middleware)
 // GET /api/users - List all users (with pagination)
-// router.get('/', getAllUsers);
+router.get('/', authMiddleware, getAllUsers);
+router.post('/', authMiddleware, createUser);
 
 // GET /api/users/:id - Get single user
 router.get('/:id', authMiddleware, getUserByIdHandler);
@@ -29,5 +30,6 @@ router.put('/:id/password', authMiddleware, changePassword);
 
 // DELETE /api/users/:id - Delete user
 router.delete('/:id', authMiddleware, deleteUser);
+
 
 export default router;

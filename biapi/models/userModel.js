@@ -5,7 +5,9 @@ const userModel = {
     // Login: find user by email OR mobile
     loginUser: async (emailOrMobile) => {
         const query = `
-            SELECT id, name, mobile, email, password
+            SELECT id, name, mobile, email, password, role, status,
+                   profile_picture, address, city, state, zip_code, country,
+                   created_at, updated_at
             FROM users
             WHERE email = ? OR mobile = ?
             LIMIT 1
@@ -64,13 +66,14 @@ const userModel = {
         const hashedPassword = await bcrypt.hash(userData.password, 10);
 
         const query = `
-            INSERT INTO users (name, email, password)
-            VALUES (?, ?, ?)
+            INSERT INTO users (name, email, mobile, password)
+            VALUES (?, ?, ?, ?)
         `;
 
         const values = [
             userData.name,
             userData.email,
+            userData.mobile,
             hashedPassword
         ];
 
@@ -79,14 +82,17 @@ const userModel = {
         return {
             id: result.insertId,
             name: userData.name,
-            email: userData.email
+            email: userData.email,
+            mobile: userData.mobile
         };
     },
 
     // Get user by ID
     getUserById: async (id) => {
         const query = `
-            SELECT id, name, mobile, email
+            SELECT id, name, mobile, email, role, status,
+                   profile_picture, address, city, state, zip_code, country,
+                   created_at, updated_at
             FROM users
             WHERE id = ?
             LIMIT 1
@@ -143,7 +149,9 @@ const userModel = {
     // Get all users
     getAllUsers: async () => {
         const query = `
-            SELECT id, name, mobile, email
+            SELECT id, name, mobile, email, role, status,
+                   profile_picture, address, city, state, zip_code, country,
+                   created_at, updated_at
             FROM users
             ORDER BY id DESC
         `;
@@ -151,6 +159,91 @@ const userModel = {
         const [rows] = await db.execute(query);
 
         return rows;
+    },
+
+    findById: async (id) => {
+        const query = `
+            SELECT id, name, mobile, email, role, status,
+                   profile_picture, address, city, state, zip_code, country,
+                   created_at, updated_at
+            FROM users
+            WHERE id = ?
+            LIMIT 1
+        `;
+
+        const [rows] = await db.execute(query, [id]);
+        return rows.length > 0 ? rows[0] : null;
+    },
+
+    // Controller expects two parameters: email and mobile
+    findByEmailOrMobile: async (email, mobile) => {
+        const query = `
+            SELECT id, name, mobile, email, password, role, status,
+                   profile_picture, address, city, state, zip_code, country,
+                   created_at, updated_at
+            FROM users
+            WHERE email = ? OR mobile = ?
+            LIMIT 1
+        `;
+
+        const [rows] = await db.execute(query, [email, mobile]);
+        return rows.length > 0 ? rows[0] : null;
+    },
+
+    findAll: async ({ page = 1, limit = 10, search = "" } = {}) => {
+        const offset = (page - 1) * limit;
+        let query = `
+            SELECT id, name, mobile, email, role, status,
+                   profile_picture, address, city, state, zip_code, country,
+                   created_at, updated_at
+            FROM users
+        `;
+
+        let countQuery = `SELECT COUNT(*) AS total FROM users`;
+        const params = [];
+
+        if (search) {
+            const searchCondition = ` WHERE name LIKE ? OR email LIKE ? OR mobile LIKE ?`;
+            query += searchCondition;
+            countQuery += searchCondition;
+            const searchParam = `%${search}%`;
+            params.push(searchParam, searchParam, searchParam);
+        }
+
+        query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
+        params.push(limit, offset);
+
+        const [rows] = await db.execute(query, params);
+        const [countRows] = await db.execute(countQuery, params.slice(0, -2));
+
+        const total = Number(countRows[0]?.total || 0);
+
+        return {
+            users: rows,
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit) || 0
+        };
+    },
+
+    create: async ({ name, email, mobile, password }) => {
+        const query = `
+            INSERT INTO users (name, email, mobile, password)
+            VALUES (?, ?, ?, ?)
+        `;
+
+        const [result] = await db.execute(query, [name, email, mobile, password]);
+        return result.insertId;
+    },
+
+    delete: async (id) => {
+        const query = `
+            DELETE FROM users
+            WHERE id = ?
+        `;
+        const [result] = await db.execute(query, [id]);
+        return result.affectedRows > 0;
     }
 };
 

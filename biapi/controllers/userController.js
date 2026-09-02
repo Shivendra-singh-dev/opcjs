@@ -1,617 +1,1070 @@
 import bcrypt from "bcryptjs";
-import db from "../config/db.js";
 import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs/promises";
+import users from "../models/userModel.js";
+import env from "dotenv";
+
+env.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const publicUploadsDir = path.join(__dirname, "..", "public", "uploads");
-const uploadDir = path.join(publicUploadsDir, "profile");
 
-// Ensure uploads directory exists
+// ======================================================
+// Upload directories
+// ======================================================
+
+const publicUploadsDir = path.join(
+  __dirname,
+  "..",
+  "public",
+  "uploads"
+);
+
+const uploadDir = path.join(
+  publicUploadsDir,
+  "profile"
+);
+
+// Create upload directory when server starts
 try {
   await fs.mkdir(uploadDir, { recursive: true });
 } catch (err) {
   console.error("Error creating uploads directory:", err);
 }
 
-// Configure multer for file uploads
+// ======================================================
+// Multer Configuration
+// ======================================================
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDir);
   },
+
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
-    cb(null, "profile-" + uniqueSuffix + ext);
+    const uniqueSuffix =
+      Date.now() + "-" + Math.round(Math.random() * 1e9);
+
+    const ext = path
+      .extname(file.originalname)
+      .toLowerCase();
+
+    cb(
+      null,
+      `profile-${uniqueSuffix}${ext}`
+    );
   },
 });
+
+const allowedMimeTypes = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+];
+
+const allowedExtensions = [
+  ".jpeg",
+  ".jpg",
+  ".png",
+  ".gif",
+  ".webp",
+];
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
+
   fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|webp/;
-    const extname = allowedTypes.test(
-      path.extname(file.originalname).toLowerCase()
-    );
-    const mimetype = allowedTypes.test(file.mimetype);
-    if (extname && mimetype) {
+    const ext = path
+      .extname(file.originalname)
+      .toLowerCase();
+
+    const isValidExtension =
+      allowedExtensions.includes(ext);
+
+    const isValidMimeType =
+      allowedMimeTypes.includes(file.mimetype);
+
+    if (isValidExtension && isValidMimeType) {
       return cb(null, true);
     }
-    cb(new Error("Only image files (jpeg, jpg, png, gif, webp) are allowed"));
+
+    return cb(
+      new Error(
+        "Only image files (jpeg, jpg, png, gif, webp) are allowed"
+      )
+    );
   },
 });
 
-// Helper: clean user object (remove password)
+// ======================================================
+// Helpers
+// ======================================================
+
 const cleanUser = (user) => {
   if (!user) return null;
-  const { password, ...userData } = user;
-  return userData;
+
+  const userObject =
+    typeof user.toJSON === "function"
+      ? user.toJSON()
+      : { ...user };
+
+  // Never expose password-related fields
+  delete userObject.password;
+  delete userObject.password_hash;
+  delete userObject.passwordHash;
+
+  return userObject;
 };
 
-// Helper: validate email format
 const isValidEmail = (email) => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
+  if (typeof email !== "string") return false;
+
+  const emailRegex =
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  return emailRegex.test(email.trim());
 };
 
-// Helper: validate mobile number
 const isValidMobile = (mobile) => {
+  if (typeof mobile !== "string") return false;
+
   const mobileRegex = /^[0-9]{10}$/;
-  return mobileRegex.test(mobile);
+
+  return mobileRegex.test(mobile.trim());
 };
 
-// Helper: get user by ID with proper error handling
-const getUserById = async (id) => {
-  try {
-    const [users] = await db.query(
-      `SELECT 
-        id, name, email, mobile, role, status, 
-        profile_picture, address, city, state, 
-        zip_code, country, created_at, updated_at 
-      FROM users WHERE id = ?`,
-      [id]
-    );
-    return users.length > 0 ? users[0] : null;
-  } catch (error) {
-    console.error("Get user by ID error:", error);
-    throw error;
+const isValidId = (id) => {
+  if (id === undefined || id === null) {
+    return false;
   }
+
+  const numericId = Number(id);
+
+  return (
+    Number.isInteger(numericId) &&
+    numericId > 0
+  );
 };
 
-// Helper: get all users with pagination
-const getAllUsersPaginated = async (page = 1, limit = 10, search = '') => {
+const getErrorMessage = (err) => {
+  if (process.env.NODE_ENV === "development") {
+    return err?.message;
+  }
+
+  return undefined;
+};
+
+const deleteFile = async (filePath) => {
+  if (!filePath) return;
+
   try {
-    const offset = (page - 1) * limit;
-    let query = `
-      SELECT 
-        id, name, email, mobile, role, status, 
-        profile_picture, address, city, state, 
-        zip_code, country, created_at, updated_at 
-      FROM users
-    `;
-    let countQuery = 'SELECT COUNT(*) as total FROM users';
-    const params = [];
-    
-    if (search) {
-      const searchCondition = ` WHERE name LIKE ? OR email LIKE ? OR mobile LIKE ?`;
-      query += searchCondition;
-      countQuery += searchCondition;
-      const searchParam = `%${search}%`;
-      params.push(searchParam, searchParam, searchParam);
+    await fs.unlink(filePath);
+  } catch (err) {
+    // File does not exist - nothing to do
+    if (err.code !== "ENOENT") {
+      console.error(
+        "Error deleting file:",
+        err
+      );
     }
-    
-    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-    params.push(limit, offset);
-    
-    const [users] = await db.query(query, params);
-    const [countResult] = await db.query(countQuery, params.slice(0, -2));
-    
-    return {
-      users,
-      total: countResult[0].total,
-      page,
-      limit,
-      totalPages: Math.ceil(countResult[0].total / limit)
-    };
-  } catch (error) {
-    console.error("Get all users paginated error:", error);
-    throw error;
   }
 };
 
-// Controllers
+const getProfileImagePath = (profilePicture) => {
+  if (!profilePicture) return null;
 
-// POST /api/users - Create new user (signup)
+  const filename = path.basename(
+    profilePicture
+  );
+
+  return path.join(
+    uploadDir,
+    filename
+  );
+};
+
+// ======================================================
+// POST /api/users
+// Create User
+// ======================================================
+
 export const createUser = async (req, res) => {
-  const { name, email, mobile, password } = req.body;
+  let {
+    name,
+    email,
+    mobile,
+    password,
+  } = req.body;
 
-  // Validation
-  if (!name || !email || !mobile || !password) {
-    return res.status(400).json({ 
+  // Validate types first
+  if (
+    typeof name !== "string" ||
+    typeof email !== "string" ||
+    typeof mobile !== "string" ||
+    typeof password !== "string"
+  ) {
+    return res.status(400).json({
       error: "All fields are required",
-      fields: { name, email, mobile, password: password ? 'provided' : 'missing' }
+    });
+  }
+
+  // Normalize BEFORE validation
+  name = name.trim();
+  email = email.trim().toLowerCase();
+  mobile = mobile.trim();
+
+  if (
+    !name ||
+    !email ||
+    !mobile ||
+    !password
+  ) {
+    return res.status(400).json({
+      error: "All fields are required",
     });
   }
 
   if (!isValidEmail(email)) {
-    return res.status(400).json({ error: "Invalid email format" });
+    return res.status(400).json({
+      error: "Invalid email format",
+    });
   }
 
   if (!isValidMobile(mobile)) {
-    return res.status(400).json({ error: "Mobile number must be 10 digits" });
+    return res.status(400).json({
+      error: "Mobile number must be 10 digits",
+    });
   }
 
   if (password.length < 6) {
-    return res.status(400).json({ error: "Password must be at least 6 characters" });
+    return res.status(400).json({
+      error:
+        "Password must be at least 6 characters",
+    });
   }
 
   try {
-    // Check if email or mobile already exists
-    const [existing] = await db.query(
-      "SELECT id, email, mobile FROM users WHERE email = ? OR mobile = ?",
-      [email, mobile]
-    );
+    const existingUser =
+      await users.findByEmailOrMobile(
+        email,
+        mobile
+      );
 
-    if (existing.length > 0) {
-      const existingField = existing[0].email === email ? 'email' : 'mobile';
-      return res.status(400).json({ 
-        error: `${existingField.charAt(0).toUpperCase() + existingField.slice(1)} already exists`,
-        field: existingField
+    if (existingUser) {
+      const existingField =
+        existingUser.email === email
+          ? "email"
+          : "mobile";
+
+      return res.status(409).json({
+        error:
+          existingField === "email"
+            ? "Email already exists"
+            : "Mobile already exists",
+        field: existingField,
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword =
+      await bcrypt.hash(password, 12);
 
-    const [result] = await db.query(
-      "INSERT INTO users (name, email, mobile, password) VALUES (?, ?, ?, ?)",
-      [name.trim(), email.toLowerCase(), mobile, hashedPassword]
-    );
+    const userId = await users.create({
+      name,
+      email,
+      mobile,
+      password: hashedPassword,
+    });
 
-    const newUser = await getUserById(result.insertId);
+    const newUser =
+      await users.findById(userId);
 
     return res.status(201).json({
       success: true,
       message: "User created successfully",
-      user: cleanUser(newUser)
+      user: cleanUser(newUser),
     });
   } catch (err) {
-    console.error("Create user error:", err);
-    return res.status(500).json({ 
+    console.error(
+      "Create user error:",
+      err
+    );
+
+    return res.status(500).json({
       error: "Database error",
-      message: process.env.NODE_ENV === 'development' ? err.message : undefined
+      message: getErrorMessage(err),
     });
   }
 };
 
-// POST /api/users/login - Login
-export const loginUser = async (req, res) => {
-  const { emailOrMobile, password } = req.body;
+// ======================================================
+// POST /api/users/login
+// Login
+// ======================================================
 
-  if (!emailOrMobile || !password) {
-    return res.status(400).json({ 
-      error: "Email/Mobile and password are required" 
+export const loginUser = async (req, res) => {
+  let {
+    emailOrMobile,
+    password,
+  } = req.body;
+
+  if (
+    typeof emailOrMobile !== "string" ||
+    typeof password !== "string" ||
+    !emailOrMobile.trim() ||
+    !password
+  ) {
+    return res.status(400).json({
+      error:
+        "Email/Mobile and password are required",
     });
   }
 
   try {
-    const [users] = await db.query(
-      "SELECT * FROM users WHERE email = ? OR mobile = ?",
-      [emailOrMobile.toLowerCase(), emailOrMobile]
-    );
+    const value =
+      emailOrMobile.trim();
 
-    if (users.length === 0) {
-      return res.status(401).json({ 
+    const normalizedEmail =
+      value.toLowerCase();
+
+    const normalizedMobile = value;
+
+    const user =
+      await users.findByEmailOrMobile(
+        normalizedEmail,
+        normalizedMobile
+      );
+
+    if (!user) {
+      return res.status(401).json({
         error: "Invalid credentials",
-        message: "No account found with this email or mobile number"
       });
-    }
-
-    const user = users[0];
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
-      return res.status(401).json({ error: "Invalid credentials" });
     }
 
     if (user.status !== "active") {
-      return res.status(403).json({ 
+      return res.status(403).json({
         error: "Account is disabled",
-        message: "Your account has been disabled. Please contact administrator."
+        message:
+          "Your account has been disabled. Please contact administrator.",
       });
     }
 
-    // Generate JWT token (if you're using JWT)
-    // const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    if (!user.password) {
+      return res.status(500).json({
+        error:
+          "User password is not available",
+      });
+    }
+
+    const isMatch =
+      await bcrypt.compare(
+        password,
+        user.password
+      );
+
+    if (!isMatch) {
+      return res.status(401).json({
+        error: "Invalid credentials",
+      });
+    }
 
     return res.status(200).json({
       success: true,
       message: "Login successful",
       user: cleanUser(user),
-      // token: token // Uncomment if using JWT
     });
   } catch (err) {
-    console.error("Login error:", err);
-    return res.status(500).json({ 
+    console.error(
+      "Login error:",
+      err
+    );
+
+    return res.status(500).json({
       error: "Database error",
-      message: process.env.NODE_ENV === 'development' ? err.message : undefined
+      message: getErrorMessage(err),
     });
   }
 };
 
-// GET /api/users - List all users with pagination
+// ======================================================
+// GET /api/users
+// Get All Users
+// ======================================================
+
 export const getAllUsers = async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const search = req.query.search || '';
+  const page = Math.max(
+    parseInt(req.query.page, 10) || 1,
+    1
+  );
+
+  const limit = Math.min(
+    Math.max(
+      parseInt(req.query.limit, 10) || 10,
+      1
+    ),
+    100
+  );
+
+  const search =
+    typeof req.query.search === "string"
+      ? req.query.search.trim()
+      : "";
 
   try {
-    const result = await getAllUsersPaginated(page, limit, search);
-    
+    const result =
+      await users.findAll({
+        page,
+        limit,
+        search,
+      });
+
     return res.status(200).json({
       success: true,
       data: result.users,
+
       pagination: {
         currentPage: result.page,
         totalPages: result.totalPages,
         totalItems: result.total,
         itemsPerPage: result.limit,
-        hasNext: result.page < result.totalPages,
-        hasPrev: result.page > 1
-      }
+        hasNext:
+          result.page < result.totalPages,
+        hasPrev:
+          result.page > 1,
+      },
     });
   } catch (err) {
-    console.error("Get users error:", err);
-    return res.status(500).json({ 
-      error: "Database error",
-      message: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
-  }
-};
-
-// GET /api/users/:id - Get single user
-export const getUserByIdHandler = async (req, res) => {
-  const { id } = req.params;
-
-  if (!id || isNaN(id)) {
-    return res.status(400).json({ error: "Invalid user ID" });
-  }
-
-  try {
-    const user = await getUserById(id);
-    
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    return res.status(200).json({
-      success: true,
-      data: user
-    });
-  } catch (err) {
-    console.error("Get user error:", err);
-    return res.status(500).json({ 
-      error: "Database error",
-      message: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
-  }
-};
-
-// GET /api/users/profile/:id - Get user profile (same as getUserById)
-export const getUserProfile = async (req, res) => {
-  // Use the same logic as getUserByIdHandler
-  await getUserByIdHandler(req, res);
-};
-
-// PUT /api/users/:id/profile - Update user profile
-export const  updateUserProfile = async (req, res) => {
-  const { id } = req.params;
-  const { name, address, city, state, zip_code, country, email, mobile } = req.body;
-
-  if (!id || isNaN(id)) {
-    return res.status(400).json({ error: "Invalid user ID" });
-  }
-
-  try {
-    const user = await getUserById(id);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    // Email and mobile are immutable - validate they match if provided
-    if (email !== undefined && email !== user.email) {
-      return res.status(400).json({
-        error: "Email cannot be changed",
-        field: "email",
-        message: "Primary email address is immutable. Contact support to change your email."
-      });
-    }
-
-    if (mobile !== undefined && mobile !== user.mobile) {
-      return res.status(400).json({
-        error: "Mobile number cannot be changed",
-        field: "mobile",
-        message: "Primary mobile number is immutable. Contact support to change your mobile number."
-      });
-    }
-
-    // Build update fields
-    const updateFields = {};
-    const allowedFields = ["name", "address", "city", "state", "zip_code", "country"];
-
-    if (name !== undefined && name.trim() !== "") updateFields.name = name.trim();
-    if (address !== undefined) updateFields.address = address.trim();
-    if (city !== undefined) updateFields.city = city.trim();
-    if (state !== undefined) updateFields.state = state.trim();
-    if (zip_code !== undefined) updateFields.zip_code = zip_code.trim();
-    if (country !== undefined) updateFields.country = country.trim();
-
-    if (Object.keys(updateFields).length === 0) {
-      return res.status(400).json({ error: "No valid fields to update" });
-    }
-
-    // Build dynamic SQL
-    const setClauses = Object.keys(updateFields)
-      .map((key) => `${key} = ?`)
-      .join(", ");
-    const values = Object.values(updateFields);
-
-    await db.query(
-      `UPDATE users SET ${setClauses}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-      [...values, id]
+    console.error(
+      "Get users error:",
+      err
     );
 
-    const updatedUser = await getUserById(id);
-
-    return res.status(200).json({
-      success: true,
-      message: "Profile updated successfully",
-      data: updatedUser
-    });
-  } catch (err) {
-    console.error("Update profile error:", err);
-    return res.status(500).json({ 
+    return res.status(500).json({
       error: "Database error",
-      message: process.env.NODE_ENV === 'development' ? err.message : undefined
+      message: getErrorMessage(err),
     });
   }
 };
 
-// PUT /api/users/:id/profile/image - Update profile picture
-export const updateProfileImage = async (req, res) => {
+// ======================================================
+// GET /api/users/:id
+// Get Single User
+// ======================================================
+
+export const getUserByIdHandler = async (
+  req,
+  res
+) => {
   const { id } = req.params;
 
-  if (!id || isNaN(id)) {
-    return res.status(400).json({ error: "Invalid user ID" });
+  if (!isValidId(id)) {
+    return res.status(400).json({
+      error: "Invalid user ID",
+    });
   }
 
-  // Use multer to handle file upload
-  upload.single("profile_picture")(req, res, async (err) => {
-    if (err) {
-      if (err instanceof multer.MulterError) {
-        return res.status(400).json({ 
-          error: `Upload error: ${err.message}`,
-          code: err.code
+  try {
+    const user =
+      await users.findById(id);
+
+    if (!user) {
+      return res.status(404).json({
+        error: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: cleanUser(user),
+    });
+  } catch (err) {
+    console.error(
+      "Get user error:",
+      err
+    );
+
+    return res.status(500).json({
+      error: "Database error",
+      message: getErrorMessage(err),
+    });
+  }
+};
+
+// ======================================================
+// GET /api/users/profile/:id
+// Get User Profile
+// ======================================================
+
+export const getUserProfile = async (
+  req,
+  res
+) => {
+  return getUserByIdHandler(req, res);
+};
+
+// ======================================================
+// PUT /api/users/:id/profile
+// Update User Profile
+// ======================================================
+
+export const updateUserProfile = async (
+  req,
+  res
+) => {
+  const { id } = req.params;
+
+  const {
+    name,
+    address,
+    city,
+    state,
+    zip_code,
+    country,
+    email,
+    mobile,
+  } = req.body;
+
+  if (!isValidId(id)) {
+    return res.status(400).json({
+      error: "Invalid user ID",
+    });
+  }
+
+  try {
+    const user =
+      await users.findById(id);
+
+    if (!user) {
+      return res.status(404).json({
+        error: "User not found",
+      });
+    }
+
+    // ------------------------------------------
+    // Email cannot be changed
+    // ------------------------------------------
+
+    if (email !== undefined) {
+      if (typeof email !== "string") {
+        return res.status(400).json({
+          error: "Invalid email",
+          field: "email",
         });
       }
-      return res.status(400).json({ error: err.message });
+
+      const normalizedEmail =
+        email.trim().toLowerCase();
+
+      if (
+        normalizedEmail !==
+        String(user.email).toLowerCase()
+      ) {
+        return res.status(400).json({
+          error: "Email cannot be changed",
+          field: "email",
+          message:
+            "Primary email address is immutable. Contact support to change your email.",
+        });
+      }
     }
 
-    if (!req.file) {
-      return res.status(400).json({ error: "No image file provided" });
+    // ------------------------------------------
+    // Mobile cannot be changed
+    // ------------------------------------------
+
+    if (mobile !== undefined) {
+      if (typeof mobile !== "string") {
+        return res.status(400).json({
+          error:
+            "Invalid mobile number",
+          field: "mobile",
+        });
+      }
+
+      const normalizedMobile =
+        mobile.trim();
+
+      if (
+        normalizedMobile !==
+        String(user.mobile)
+      ) {
+        return res.status(400).json({
+          error:
+            "Mobile number cannot be changed",
+          field: "mobile",
+          message:
+            "Primary mobile number is immutable. Contact support to change your mobile number.",
+        });
+      }
     }
 
-    try {
-      const user = await getUserById(id);
-      if (!user) {
-        // Delete uploaded file if user not found
-        try {
-          await fs.unlink(req.file.path);
-        } catch (unlinkError) {
-          console.error("Error deleting file:", unlinkError);
+    const updateData = {};
+
+    if (name !== undefined) {
+      if (typeof name !== "string") {
+        return res.status(400).json({
+          error: "Invalid name",
+        });
+      }
+
+      const value = name.trim();
+
+      if (value) {
+        updateData.name = value;
+      }
+    }
+
+    const stringFields = {
+      address,
+      city,
+      state,
+      zip_code,
+      country,
+    };
+
+    for (const [field, value] of Object.entries(
+      stringFields
+    )) {
+      if (value !== undefined) {
+        if (typeof value !== "string") {
+          return res.status(400).json({
+            error: `Invalid ${field}`,
+            field,
+          });
         }
-        return res.status(404).json({ error: "User not found" });
+
+        updateData[field] =
+          value.trim();
       }
+    }
 
-      // Delete old profile picture if exists
-      if (user.profile_picture) {
-        const oldImageRelative = user.profile_picture.replace(/^\//, "");
-        const oldImagePath = path.join(__dirname, "..", "public", oldImageRelative);
-        try {
-          await fs.unlink(oldImagePath);
-        } catch (unlinkError) {
-          console.error("Error deleting old profile picture:", unlinkError);
-        }
-      }
-
-      // Store public URL to file in the profile folder
-      const imageUrl = `/uploads/profile/${req.file.filename}`;
-
-      await db.query(
-        "UPDATE users SET profile_picture = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-        [imageUrl, id]
-      );
-
-      return res.status(200).json({
-        success: true,
-        message: "Profile picture updated successfully",
-        data: { profile_picture: imageUrl }
-      });
-    } catch (dbErr) {
-      console.error("Update image error:", dbErr);
-      // Delete uploaded file on database error
-      try {
-        await fs.unlink(req.file.path);
-      } catch (unlinkError) {
-        console.error("Error deleting file on db error:", unlinkError);
-      }
-      return res.status(500).json({ 
-        error: "Database error",
-        message: process.env.NODE_ENV === 'development' ? dbErr.message : undefined
+    if (
+      Object.keys(updateData).length === 0
+    ) {
+      return res.status(400).json({
+        error:
+          "No valid fields to update",
       });
     }
-  });
+
+    await users.update(
+      id,
+      updateData
+    );
+
+    const updatedUser =
+      await users.findById(id);
+
+    return res.status(200).json({
+      success: true,
+      message:
+        "Profile updated successfully",
+      data: cleanUser(updatedUser),
+    });
+  } catch (err) {
+    console.error(
+      "Update profile error:",
+      err
+    );
+
+    return res.status(500).json({
+      error: "Database error",
+      message: getErrorMessage(err),
+    });
+  }
 };
 
-// PUT /api/users/:id - Update user role (admin only)
-export const updateUser = async (req, res) => {
+// ======================================================
+// PUT /api/users/:id/profile/image
+// Update Profile Picture
+// ======================================================
+
+export const updateProfileImage = async (
+  req,
+  res
+) => {
   const { id } = req.params;
-  const { role, status } = req.body;
 
-  if (!id || isNaN(id)) {
-    return res.status(400).json({ error: "Invalid user ID" });
-  }
-
-  const validRoles = ['user', 'admin', 'moderator'];
-  const validStatuses = ['active', 'inactive', 'suspended'];
-
-  if (role && !validRoles.includes(role)) {
-    return res.status(400).json({ 
-      error: "Invalid role",
-      validRoles 
+  if (!isValidId(id)) {
+    return res.status(400).json({
+      error: "Invalid user ID",
     });
   }
 
-  if (status && !validStatuses.includes(status)) {
-    return res.status(400).json({ 
+  upload.single("profile_picture")(
+    req,
+    res,
+    async (err) => {
+      if (err) {
+        if (
+          err instanceof multer.MulterError
+        ) {
+          return res.status(400).json({
+            error: `Upload error: ${err.message}`,
+            code: err.code,
+          });
+        }
+
+        return res.status(400).json({
+          error:
+            err?.message ||
+            "Image upload failed",
+        });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({
+          error:
+            "No image file provided",
+        });
+      }
+
+      try {
+        const user =
+          await users.findById(id);
+
+        // User doesn't exist
+        if (!user) {
+          await deleteFile(
+            req.file.path
+          );
+
+          return res.status(404).json({
+            error: "User not found",
+          });
+        }
+
+        const imageUrl =
+          `/uploads/profile/${req.file.filename}`;
+
+        // Update database first
+        await users.update(id, {
+          profile_picture: imageUrl,
+        });
+
+        // Delete old image only after DB update
+        if (user.profile_picture) {
+          const oldImagePath =
+            getProfileImagePath(
+              user.profile_picture
+            );
+
+          if (oldImagePath) {
+            await deleteFile(
+              oldImagePath
+            );
+          }
+        }
+
+        return res.status(200).json({
+          success: true,
+          message:
+            "Profile picture updated successfully",
+          data: {
+            profile_picture:
+              imageUrl,
+          },
+        });
+      } catch (err) {
+        console.error(
+          "Update image error:",
+          err
+        );
+
+        // Remove newly uploaded file
+        await deleteFile(
+          req.file.path
+        );
+
+        return res.status(500).json({
+          error: "Database error",
+          message:
+            getErrorMessage(err),
+        });
+      }
+    }
+  );
+};
+
+// ======================================================
+// PUT /api/users/:id
+// Update Role / Status
+// ======================================================
+
+export const updateUser = async (
+  req,
+  res
+) => {
+  const { id } = req.params;
+
+  const {
+    role,
+    status,
+  } = req.body;
+
+  if (!isValidId(id)) {
+    return res.status(400).json({
+      error: "Invalid user ID",
+    });
+  }
+
+  const validRoles = [
+    "user",
+    "admin",
+    "moderator",
+  ];
+
+  const validStatuses = [
+    "active",
+    "inactive",
+    "suspended",
+  ];
+
+  if (
+    role !== undefined &&
+    !validRoles.includes(role)
+  ) {
+    return res.status(400).json({
+      error: "Invalid role",
+      validRoles,
+    });
+  }
+
+  if (
+    status !== undefined &&
+    !validStatuses.includes(status)
+  ) {
+    return res.status(400).json({
       error: "Invalid status",
-      validStatuses 
+      validStatuses,
     });
   }
 
   try {
-    const user = await getUserById(id);
+    const user =
+      await users.findById(id);
+
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({
+        error: "User not found",
+      });
     }
 
-    const updateFields = {};
-    if (role !== undefined) updateFields.role = role;
-    if (status !== undefined) updateFields.status = status;
+    const updateData = {};
 
-    if (Object.keys(updateFields).length === 0) {
-      return res.status(400).json({ error: "No valid fields to update" });
+    if (role !== undefined) {
+      updateData.role = role;
     }
 
-    const setClauses = Object.keys(updateFields)
-      .map((key) => `${key} = ?`)
-      .join(", ");
-    const values = Object.values(updateFields);
+    if (status !== undefined) {
+      updateData.status = status;
+    }
 
-    await db.query(
-      `UPDATE users SET ${setClauses}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-      [...values, id]
+    if (
+      Object.keys(updateData).length === 0
+    ) {
+      return res.status(400).json({
+        error:
+          "No valid fields to update",
+      });
+    }
+
+    await users.update(
+      id,
+      updateData
     );
 
-    const updatedUser = await getUserById(id);
+    const updatedUser =
+      await users.findById(id);
 
     return res.status(200).json({
       success: true,
-      message: "User updated successfully",
-      data: updatedUser
+      message:
+        "User updated successfully",
+      data: cleanUser(updatedUser),
     });
   } catch (err) {
-    console.error("Update user error:", err);
-    return res.status(500).json({ 
+    console.error(
+      "Update user error:",
+      err
+    );
+
+    return res.status(500).json({
       error: "Database error",
-      message: process.env.NODE_ENV === 'development' ? err.message : undefined
+      message: getErrorMessage(err),
     });
   }
 };
 
-// PUT /api/users/:id/password - Change password
-export const changePassword = async (req, res) => {
-  const { id } = req.params;
-  const { currentPassword, newPassword } = req.body;
+// ======================================================
+// PUT /api/users/:id/password
+// Change Password
+// ======================================================
 
-  if (!id || isNaN(id)) {
-    return res.status(400).json({ error: "Invalid user ID" });
+export const changePassword = async (
+  req,
+  res
+) => {
+  const { id } = req.params;
+
+  const {
+    currentPassword,
+    newPassword,
+  } = req.body;
+
+  if (!isValidId(id)) {
+    return res.status(400).json({
+      error: "Invalid user ID",
+    });
   }
 
-  if (!currentPassword || !newPassword) {
-    return res.status(400).json({ 
-      error: "Current password and new password are required" 
+  if (
+    typeof currentPassword !== "string" ||
+    typeof newPassword !== "string" ||
+    !currentPassword ||
+    !newPassword
+  ) {
+    return res.status(400).json({
+      error:
+        "Current password and new password are required",
     });
   }
 
   if (newPassword.length < 6) {
-    return res.status(400).json({ 
-      error: "New password must be at least 6 characters" 
+    return res.status(400).json({
+      error:
+        "New password must be at least 6 characters",
     });
   }
 
   try {
-    const [users] = await db.query("SELECT * FROM users WHERE id = ?", [id]);
-    if (users.length === 0) {
-      return res.status(404).json({ error: "User not found" });
+    const user =
+      await users.findByIdWithPassword(id);
+
+    if (!user) {
+      return res.status(404).json({
+        error: "User not found",
+      });
     }
 
-    const user = users[0];
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!user.password) {
+      return res.status(500).json({
+        error:
+          "User password is not available",
+      });
+    }
+
+    const isMatch =
+      await bcrypt.compare(
+        currentPassword,
+        user.password
+      );
+
     if (!isMatch) {
-      return res.status(401).json({ error: "Current password is incorrect" });
+      return res.status(401).json({
+        error:
+          "Current password is incorrect",
+      });
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await db.query(
-      "UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-      [hashedPassword, id]
-    );
+    const hashedPassword =
+      await bcrypt.hash(
+        newPassword,
+        12
+      );
+
+    await users.update(id, {
+      password: hashedPassword,
+    });
 
     return res.status(200).json({
       success: true,
-      message: "Password changed successfully"
+      message:
+        "Password changed successfully",
     });
   } catch (err) {
-    console.error("Change password error:", err);
-    return res.status(500).json({ 
+    console.error(
+      "Change password error:",
+      err
+    );
+
+    return res.status(500).json({
       error: "Database error",
-      message: process.env.NODE_ENV === 'development' ? err.message : undefined
+      message: getErrorMessage(err),
     });
   }
 };
 
-// DELETE /api/users/:id - Delete user
-export const deleteUser = async (req, res) => {
+// ======================================================
+// DELETE /api/users/:id
+// Delete User
+// ======================================================
+
+export const deleteUser = async (
+  req,
+  res
+) => {
   const { id } = req.params;
 
-  if (!id || isNaN(id)) {
-    return res.status(400).json({ error: "Invalid user ID" });
+  if (!isValidId(id)) {
+    return res.status(400).json({
+      error: "Invalid user ID",
+    });
   }
 
   try {
-    const user = await getUserById(id);
+    const user =
+      await users.findById(id);
+
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({
+        error: "User not found",
+      });
     }
 
-    // Delete profile picture if exists
+    // Delete profile picture
     if (user.profile_picture) {
-      const imagePath = path.join(uploadDir, path.basename(user.profile_picture));
-      try {
-        await fs.unlink(imagePath);
-      } catch (unlinkError) {
-        console.error("Error deleting profile picture:", unlinkError);
+      const imagePath =
+        getProfileImagePath(
+          user.profile_picture
+        );
+
+      if (imagePath) {
+        await deleteFile(
+          imagePath
+        );
       }
     }
 
-    await db.query("DELETE FROM users WHERE id = ?", [id]);
+    await users.delete(id);
 
     return res.status(200).json({
       success: true,
-      message: "User deleted successfully"
+      message:
+        "User deleted successfully",
     });
   } catch (err) {
-    console.error("Delete user error:", err);
-    return res.status(500).json({ 
+    console.error(
+      "Delete user error:",
+      err
+    );
+
+    return res.status(500).json({
       error: "Database error",
-      message: process.env.NODE_ENV === 'development' ? err.message : undefined
+      message: getErrorMessage(err),
     });
   }
 };
+
+// ======================================================
+// Exports
+// ======================================================
 
 export default {
   createUser,
@@ -623,7 +1076,7 @@ export default {
   updateProfileImage,
   updateUser,
   changePassword,
-  deleteUser
+  deleteUser,
 };
 
 export { upload };

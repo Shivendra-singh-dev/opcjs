@@ -32,7 +32,6 @@ export default function LoginModal({ isOpen, onClose }) {
       console.log(data);
       if (res.ok) {
         localStorage.setItem("loggedInUser", JSON.stringify(data.user));
-        console.log("Logged in user:", data.user);
         onClose();
         router.push("/dashboard");
       } else {
