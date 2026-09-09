@@ -11,6 +11,7 @@ import userRoutes from './routes/users.js';
 import slibRoutes from './routes/slibRoutes.js';
 import slidersRoutes from './routes/slidersRoute.js';
 import pageRoutes from './routes/pageRoute.js';
+import panCardRoutes from './routes/panCardRoutes.js';
 
 dotenv.config();
 
@@ -59,6 +60,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/slib', slibRoutes);
 app.use('/api/sliders', slidersRoutes);
 app.use('/api/pagedt', pageRoutes);
+app.use('/api/pancard', panCardRoutes);
 
 
 // ---------- Global Error Handling ----------

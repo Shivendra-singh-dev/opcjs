@@ -1,0 +1,100 @@
+.label{
+
+}
+.parent{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+.form{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+.input{
+    width: 300px;
+    height: 40px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+}
+.textarea{
+    width: 300px;
+    height: 100px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+}
+.button{
+    width: 300px;
+    height: 40px;
+    border-radius: 5px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+}
+.button:hover{
+    background-color: #0056b3;
+}
+.error{
+    color: red;
+    font-size: 0.8rem;
+}
+.success{
+    color: green;
+    font-size: 0.8rem;
+}
+.button:disabled{
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+.loading{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+.button.loading{
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+.title{
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}   
+.textarea:focus, .input:focus{
+    outline: none;
+    border: 1px solid #007bff;
+}
+.toast{
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    background-color: #333;
+    color: white;
+    padding: 1rem;
+    border-radius: 5px;
+    z-index: 1000;
+}
+.toast.success{
+    background-color: green;
+}
+.toast.error{
+    background-color: red;
+}
+.toast.info{
+    background-color: blue;
+}
+
+.msg{
+    color: red;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    text-align: center;
+}
