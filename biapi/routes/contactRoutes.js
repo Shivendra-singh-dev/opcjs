@@ -3,11 +3,9 @@ import contactController from '../controllers/contactController.js';
 
 const router = express.Router();
 
-// Contact API
-// GET /api/contacts
-// POST /api/contacts
-router.get('/', contactController);
-router.post('/', contactController);
+router.get('/', contactController.getContacts);
+router.post('/create', contactController.createContact);
+
 
 export default router;
 

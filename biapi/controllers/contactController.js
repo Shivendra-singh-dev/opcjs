@@ -1,12 +1,14 @@
-import db from '../config/db.js';
+import contactModal from '../models/contactModal.js';
+import leadsModal from '../models/leadModal.js';
 
-const contactController = async (req, res) => {
-  try {
-    if (req.method === 'POST') {
+const contactController = {
+  createContact: async (req, res) => {
+    try {
       const { name, email, mobile, message } = req.body;
 
-      // Validate all required fields
+      // Validate required fields
       const missingFields = [];
+
       if (!name || !name.trim()) missingFields.push('name');
       if (!email || !email.trim()) missingFields.push('email');
       if (!mobile || !mobile.trim()) missingFields.push('mobile');
@@ -23,72 +25,91 @@ const contactController = async (req, res) => {
         });
       }
 
-      // Run duplicate checks in parallel
-      const [emailResults] = await db.query(
-        'SELECT id FROM contacts WHERE email = ?',
-        [email.trim()]
-      );
+      // Clean data
+      const contactData = {
+        name: name.trim(),
+        email: email.trim(),
+        mobile: mobile.trim(),
+        message: message.trim()
+      };
 
-      const [mobileResults] = await db.query(
-        'SELECT id FROM contacts WHERE mobile = ?',
-        [mobile.trim()]
-      );
+      // 1. Create contact
+      const contact = await contactModal.createContacts(contactData);
 
-      const errors = {};
-      if (emailResults.length > 0) {
-        errors.email = 'This email is already registered.';
-      }
-      if (mobileResults.length > 0) {
-        errors.mobile = 'This mobile number is already registered.';
-      }
+      // 2. Create lead using contact information
+      const lead = await leadsModal.createCustomerLead({
+        lead_type: 'contact',
+        lead_unique_id: contact.id,
 
-      if (Object.keys(errors).length > 0) {
+        name: contact.name,
+        email: contact.email,
+        mobile: contact.mobile,
+        status: 'active',
+
+        meta: {
+          contact_id: contact.id,
+          message: contact.message
+        }
+      });
+
+      // 3. Return contact + lead
+      return res.status(201).json({
+        success: true,
+        message: 'Contact created and lead stored successfully.',
+        data: {
+          contact,
+          lead
+        }
+      });
+
+    } catch (err) {
+      console.error('Contact Controller Error:', err);
+
+      // Handle duplicate entry
+      if (err.code === 'ER_DUP_ENTRY') {
         return res.status(409).json({
           success: false,
-          message: Object.values(errors).join(' '),
-          errors
+          message: 'Email or mobile number already exists.',
+          error:
+            process.env.NODE_ENV === 'development'
+              ? err.message
+              : undefined
         });
       }
 
-      // Insert new contact
-      const [result] = await db.query(
-        'INSERT INTO contacts (name, mobile, email, message) VALUES (?, ?, ?, ?)',
-        [name.trim(), mobile.trim(), email.trim(), message.trim()]
-      );
-
-      return res.status(201).json({
-        success: true,
-        data: {
-          id: result.insertId,
-          name: name.trim(),
-          email: email.trim(),
-          mobile: mobile.trim(),
-          message: message.trim(),
-        },
-      });
-
-    } else if (req.method === 'GET') {
-      const [results] = await db.query('SELECT * FROM contacts ORDER BY created_at DESC');
-      return res.status(200).json({
-        success: true,
-        data: results,
-      });
-
-    } else {
-      return res.status(405).json({
+      return res.status(500).json({
         success: false,
-        message: 'Method Not Allowed',
+        message: 'Internal server error. Please try again later.',
+        error:
+          process.env.NODE_ENV === 'development'
+            ? err.message
+            : undefined
       });
     }
-  } catch (err) {
-    console.error('Contact Controller Error:', err);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error. Please try again later.',
-      error: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
+  },
+
+  getContacts: async (req, res) => {
+    try {
+      const contacts = await contactModal.getContacts();
+
+      return res.status(200).json({
+        success: true,
+        data: contacts
+      });
+
+    } catch (err) {
+      console.error('Get Contacts Error:', err);
+
+      return res.status(500).json({
+        success: false,
+        message: 'Internal server error. Please try again later.',
+        error:
+          process.env.NODE_ENV === 'development'
+            ? err.message
+            : undefined
+      });
+    }
   }
 };
 
 export default contactController;
-

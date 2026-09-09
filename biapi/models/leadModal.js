@@ -21,8 +21,8 @@ const createLead = async (data) => {
 
 // Create Customer Lead
 const createCustomerLead = async (data) => {
-    const { lead_type, lead_unique_id, name, email, mobile, address, meta} = data;
-    const [result] = await db.query(` INSERT INTO leads (lead_type,lead_unique_id,name, email,mobile,address,meta ) VALUES (?, ?, ?, ?, ?, ?, ?)`, [ lead_type, lead_unique_id, name, email, mobile, address, meta ? JSON.stringify(meta) : null]);
+    const { lead_type, lead_unique_id, name, email, mobile, address,status, meta} = data;
+    const [result] = await db.query(` INSERT INTO leads (lead_type,lead_unique_id,name, email,mobile,address,status,meta ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, [ lead_type, lead_unique_id, name, email, mobile, address, status, meta ? JSON.stringify(meta) : null]);
     return { id: result.insertId, ...data};
 };
 
