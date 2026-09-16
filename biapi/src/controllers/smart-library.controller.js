@@ -1,4 +1,4 @@
-import argon2 from "argon2";
+import bcrypt from "bcryptjs";
 import db from "../config/database.js";
 
 export const getSlib = async (req, res) => {
@@ -45,7 +45,7 @@ export const createSlib = async (req, res) => {
   try {
     const { name, mobile, email, address, password } = req.body;
     // Hash password
-    const passwordHash = await argon2.hash(password);
+    const passwordHash = await bcrypt.hash(password, 10);
     const [data] = await db.execute("INSERT INTO slib_users (name, mobile, email,address,password_hash) VALUES (?, ?, ?, ?, ?)", [name, mobile, email, address, passwordHash]);
     return res.status(200).json({
       success: true, message: 'Record saved successfully', data: {
@@ -75,7 +75,7 @@ export const updateSlib = async (req, res) => {
     if (!id) {
       return res.status(400).json({ success: false, message: "ID is required" });
     }
-    const passwordHash = await argon2.hash(password);
+    const passwordHash = await bcrypt.hash(password, 10);
     const [result] = await db.execute("UPDATE slib_users SET name = ?, mobile = ?, email = ?, address = ?, password_hash = ? WHERE id = ?", [name, mobile, email, address, passwordHash, id]);
 
     if (result.affectedRows === 0) {

@@ -12,6 +12,7 @@ import slibRoutes from './routes/smart-library.routes.js';
 import slidersRoutes from './routes/slider.routes.js';
 import pageRoutes from './routes/page.routes.js';
 import panCardRoutes from './routes/pancard.routes.js';
+import airoutes from './routes/airoutes.js';
 
 dotenv.config();
 
@@ -61,7 +62,7 @@ app.use('/api/slib', slibRoutes);
 app.use('/api/sliders', slidersRoutes);
 app.use('/api/pagedt', pageRoutes);
 app.use('/api/pancard', panCardRoutes);
-
+app.use('/api/ai',airoutes); 
 
 // ---------- Global Error Handling ----------
 app.use((req, res, next) => {

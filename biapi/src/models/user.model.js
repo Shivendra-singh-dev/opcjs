@@ -1,5 +1,5 @@
 import db from "../config/database.js";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 const userModel = {
     // Login: find user by email OR mobile
