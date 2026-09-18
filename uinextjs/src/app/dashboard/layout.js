@@ -40,12 +40,6 @@ export default function DashboardLayout({ children }) {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const stored = localStorage.getItem('loggedInUser');
-        if (stored) {
-          setLoggedInUser(JSON.parse(stored));
-          return;
-        }
-
         const res = await fetch('/api/auth/session', { credentials: 'include' });
         if (!res.ok) {
           localStorage.removeItem('loggedInUser');

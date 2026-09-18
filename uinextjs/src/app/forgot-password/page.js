@@ -7,11 +7,33 @@ import Navbar from "../../components/navbar";
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle password reset logic here
-    setSubmitted(true);
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Unable to process the request.");
+        return;
+      }
+
+      setSubmitted(true);
+    } catch {
+      setError("Unable to connect to the server.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -47,11 +69,12 @@ export default function ForgotPassword() {
                 </div>
 
                 <button type="submit" className={styles.submitBtn}>
-                  Send Reset Link
+                  {loading ? "Sending..." : "Send Reset Link"}
                   <svg className={styles.btnIcon} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M5 12h14M12 5l7 7-7 7"/>
                   </svg>
                 </button>
+                {error && <p className={styles.errorMessage}>{error}</p>}
 
                 <div className={styles.backLink}>
                   <Link href="/signup">← Back to Sign In</Link>

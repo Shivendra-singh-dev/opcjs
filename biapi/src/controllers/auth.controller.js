@@ -1,5 +1,26 @@
 import bcrypt from "bcryptjs";
-import userModel from "../models/user.model.js";
+import authModal from "../models/authModel.js";
+
+const toSessionUser = (user) => ({
+    id: user.id,
+    name: user.name,
+    mobile: user.mobile,
+    email: user.email,
+    role: user.role || "user"
+});
+
+const saveUserSession = (req, user) => new Promise((resolve, reject) => {
+    req.session.regenerate((regenerateError) => {
+        if (regenerateError) return reject(regenerateError);
+
+        req.session.user = toSessionUser(user);
+        req.session.isLoggedIn = true;
+        req.session.save((saveError) => {
+            if (saveError) return reject(saveError);
+            resolve(req.session.user);
+        });
+    });
+});
 
 export const getSessionUser = async (req, res) => {
     if (!req.session || !req.session.isLoggedIn || !req.session.user) {
@@ -15,6 +36,14 @@ export const getSessionUser = async (req, res) => {
 };
 
 export const logout = async (req, res) => {
+    if (!req.session) {
+        res.clearCookie("connect.sid", { path: "/" });
+        return res.status(200).json({
+            status: "success",
+            message: "Logout successful"
+        });
+    }
+
     req.session.destroy((err) => {
         if (err) {
             console.error("Session destroy error:", err);
@@ -23,7 +52,7 @@ export const logout = async (req, res) => {
             });
         }
 
-        res.clearCookie("connect.sid");
+        res.clearCookie("connect.sid", { path: "/" });
         return res.status(200).json({
             status: "success",
             message: "Logout successful"
@@ -36,83 +65,31 @@ export const logout = async (req, res) => {
  */
 export const Login = async (req, res) => {
     try {
-        const { emailOrMobile, password } = req.body;
+        const { emailOrMobile, email, password } = req.body;
+        const loginValue = emailOrMobile || email;
 
-        // 1. Validate input
-        if (!emailOrMobile || !password) {
+        if (!loginValue || !password) {
             return res.status(400).json({
                 message: "Email/mobile and password are required"
             });
         }
 
-        // 2. Find user by email or mobile
-        const user = await userModel.loginUser(emailOrMobile);
+        const user = await authModal.loginUser(loginValue);
 
-        if (!user) {
-            return res.status(404).json({
-                message: "User not found"
-            });
-        }
-
-        // 3. Verify password
-        const isMatch = await bcrypt.compare(
-            password,
-            user.password
-        );
-
-        if (!isMatch) {
+        if (!user || (user.status && user.status !== "active")) {
             return res.status(401).json({
                 message: "Invalid credentials"
             });
         }
 
-        // 4. Regenerate session after successful login
-        req.session.regenerate((err) => {
-            if (err) {
-                console.error("Session regenerate error:", err);
-
-                return res.status(500).json({
-                    message: "Could not create session"
-                });
-            }
-
-            // 5. Store user information in session
-            req.session.user = {
-                id: user.id,
-                name: user.name,
-                mobile: user.mobile,
-                email: user.email
-            };
-
-            req.session.isLoggedIn = true;
-
-            // 6. Save session
-            req.session.save((err) => {
-                if (err) {
-                    console.error("Session save error:", err);
-
-                    return res.status(500).json({
-                        message: "Could not save session"
-                    });
-                }
-
-                const loggedInUser = {
-                    id: user.id,
-                    name: user.name,
-                    mobile: user.mobile,
-                    email: user.email
-                };
-
-                req.session.user = loggedInUser;
-                req.session.isLoggedIn = true;
-
-                return res.status(200).json({
-                    status: "success",
-                    message: "Login successful",
-                    user: loggedInUser
-                });
+        if (!(await bcrypt.compare(password, user.password))) {
+            return res.status(401).json({
+                message: "Invalid credentials"
             });
-        });
+        }
+
+        const loggedInUser = await saveUserSession(req, user);
+        return res.status(200).json({ status: "success", message: "Login successful", user: loggedInUser });
 
     } catch (error) {
         console.error("Login error:", error);
@@ -129,22 +106,17 @@ export const Login = async (req, res) => {
  */
 export const signup = async (req, res) => {
     try {
-        const {
-            name,
-            mobile,
-            email,
-            password
-        } = req.body;
+        const { name, mobile, email, password } = req.body;
+        const normalizedEmail = email?.trim().toLowerCase();
+        const normalizedMobile = mobile?.trim();
 
-        // 1. Validate input
-        if (!name || !mobile || !email || !password) {
+        if (!name?.trim() || !normalizedMobile || !normalizedEmail || !password) {
             return res.status(400).json({
                 message: "Name, mobile, email and password are required"
             });
         }
 
-        // 2. Check whether email already exists
-        const existingEmail = await userModel.getUserByEmail(email);
+        const existingEmail = await authModal.getUserByEmail(normalizedEmail);
 
         if (existingEmail) {
             return res.status(409).json({
@@ -153,7 +125,7 @@ export const signup = async (req, res) => {
         }
 
         // 3. Check whether mobile already exists
-        const existingMobile = await userModel.getUserByMobile(mobile);
+        const existingMobile = await authModal.getUserByMobile(normalizedMobile);
 
         if (existingMobile) {
             return res.status(409).json({
@@ -162,20 +134,17 @@ export const signup = async (req, res) => {
         }
 
         // 4. Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // 5. Create user
-        const user = await userModel.signupUser({
-            name,
-            mobile,
-            email,
-            password: hashedPassword
+        const user = await authModal.signupUser({
+            name: name.trim(),
+            mobile: normalizedMobile,
+            email: normalizedEmail,
+            password
         });
+        const sessionUser = await saveUserSession(req, user);
 
-        // 6. Response
         return res.status(201).json({
             message: "User signed up successfully",
-            userId: user.id
+            user: sessionUser
         });
 
     } catch (error) {
@@ -186,3 +155,23 @@ export const signup = async (req, res) => {
         });
     }
 };
+
+export const forgotPassword = async (req, res) => {
+    const email = req.body?.email?.trim().toLowerCase();
+
+    if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await authModal.getUserByEmail(email);
+
+    // Keep the response generic so account existence is not disclosed.
+    if (user) {
+        console.log(`Password reset requested for ${email}`);
+    }
+
+    return res.status(200).json({
+        message: "If an account exists for this email, password reset instructions will be sent."
+    });
+};
+

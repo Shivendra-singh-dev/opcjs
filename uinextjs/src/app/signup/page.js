@@ -44,7 +44,7 @@ export default function Signup() {
     try {
       const endpoint = isLogin ? "/api/auth/login" : "/api/auth/signup";
       const body = isLogin
-        ? { email: formData.email, password: formData.password }
+        ? { emailOrMobile: formData.email, password: formData.password }
         : {
             name: formData.name,
             email: formData.email,
@@ -55,12 +55,16 @@ export default function Signup() {
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(body),
       });
 
       const data = await res.json();
 
       if (res.ok) {
+        if (data.user) {
+          localStorage.setItem("loggedInUser", JSON.stringify(data.user));
+        }
         setMessage(data.message || "Success!");
         setIsError(false);
         // Reset form

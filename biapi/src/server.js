@@ -32,7 +32,7 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // CORS (allow credentials if using cookies)
 app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', 'http://localhost:3000'); // or your frontend URL
+    res.header('Access-Control-Allow-Origin', 'http://localhost:3001'); // or your frontend URL
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Cookie, Authorization');
     res.header('Access-Control-Allow-Credentials', 'true');   // needed for session cookies

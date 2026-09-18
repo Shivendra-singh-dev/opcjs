@@ -39,11 +39,12 @@ export default function Contact() {
     setIsError(false)
     setFieldErrors({})
     try {
-      const res = await fetch('/api/contacts', {
+      const res = await fetch('/api/contacts/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       })
+      
       const data = await res.json()
       if (res.ok) {
         setResponseMessage('Message sent successfully!')
