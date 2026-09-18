@@ -8,28 +8,28 @@ const router = express.Router();
 
 // Protected routes (authentication required - add auth middleware)
 // GET /api/users - List all users (with pagination)
-router.get('/', authMiddleware, getAllUsers);
-router.post('/', authMiddleware, createUser);
+// router.get('/', authMiddleware, getAllUsers);
+// router.post('/', authMiddleware, createUser);
 
-// GET /api/users/:id - Get single user
-router.get('/:id', authMiddleware, getUserByIdHandler);
+// // GET /api/users/:id - Get single user
+// router.get('/:id', authMiddleware, getUserByIdHandler);
 
-// PUT /api/users/:id - Update user (admin role update)
-router.put('/:id', authMiddleware, updateUser);
+// // PUT /api/users/:id - Update user (admin role update)
+// router.put('/:id', authMiddleware, updateUser);
 
 // get /api/users/:id/profile - get user profile
-router.get('/:id/profile', authMiddleware, getUserProfile);
+router.get('/', getUserProfile);
 // PUT /api/users/:id/profile - Update user profile
 router.put('/:id/profile', authMiddleware, updateUserProfile);
 
 // PUT /api/users/:id/profile/image - Update profile picture
 router.put('/:id/profile/image', authMiddleware, updateProfileImage);
 
-// PUT /api/users/:id/password - Change password
-router.put('/:id/password', authMiddleware, changePassword);
+// // PUT /api/users/:id/password - Change password
+// router.put('/:id/password', authMiddleware, changePassword);
 
-// DELETE /api/users/:id - Delete user
-router.delete('/:id', authMiddleware, deleteUser);
+// // DELETE /api/users/:id - Delete user
+// router.delete('/:id', authMiddleware, deleteUser);
 
 
 export default router;

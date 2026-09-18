@@ -13,6 +13,8 @@ import slidersRoutes from './routes/slider.routes.js';
 import pageRoutes from './routes/page.routes.js';
 import panCardRoutes from './routes/pancard.routes.js';
 import airoutes from './routes/airoutes.js';
+import isAuthenticated from './middleware/auth.middleware.js';
+import userProfile from './routes/user.routes.js'
 
 dotenv.config();
 
@@ -52,7 +54,7 @@ app.use(session({
     }
 }));
 
-// ---------- API Routes ----------
+// ---------- Public Routes ----------
 app.use('/api/auth', authRoutes);
 app.use('/api/contacts', contactsRoutes);
 app.use('/api/products', productRoutes);
@@ -64,6 +66,8 @@ app.use('/api/pagedt', pageRoutes);
 app.use('/api/pancard', panCardRoutes);
 app.use('/api/ai',airoutes); 
 
+// ---------- Dashboard Routes ----------
+app.use('/api/dashboard',isAuthenticated,userProfile);
 // ---------- Global Error Handling ----------
 app.use((req, res, next) => {
     res.status(404);

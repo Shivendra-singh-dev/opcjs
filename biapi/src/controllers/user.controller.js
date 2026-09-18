@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import fs from "fs/promises";
 import users from "../models/user.model.js";
 import env from "dotenv";
+import { getSessionUser } from "./auth.controller.js";
 
 env.config();
 
@@ -457,10 +458,7 @@ export const getAllUsers = async (req, res) => {
 // Get Single User
 // ======================================================
 
-export const getUserByIdHandler = async (
-  req,
-  res
-) => {
+export const getUserByIdHandler = async (req,res) => {
   const { id } = req.params;
 
   if (!isValidId(id)) {
@@ -501,10 +499,9 @@ export const getUserByIdHandler = async (
 // Get User Profile
 // ======================================================
 
-export const getUserProfile = async (
-  req,
-  res
-) => {
+export const getUserProfile = async (req,res) => {
+  console.log(req.session.user);
+  getSessionUser
   return getUserByIdHandler(req, res);
 };
 

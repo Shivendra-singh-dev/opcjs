@@ -88,8 +88,9 @@ export const Login = async (req, res) => {
             });
         }
 
-        const loggedInUser = await saveUserSession(req, user);
-        return res.status(200).json({ status: "success", message: "Login successful", user: loggedInUser });
+        await saveUserSession(req, user);
+        // const loggedInUser = await saveUserSession(req, user);
+        return res.status(200).json({ status: "success", message: "Login successful" });
 
     } catch (error) {
         console.error("Login error:", error);

@@ -3,7 +3,7 @@ import { signup, Login, forgotPassword, getSessionUser, logout } from '../contro
 
 const router = express.Router();
 // Signup route
-router.get('/session', getSessionUser);
+router.get('/session', getSessionUser);// for test session data
 router.post('/logout', logout);
 router.post('/signup', signup); 
 router.post('/login', Login); 
